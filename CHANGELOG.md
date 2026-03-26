@@ -11,6 +11,32 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [0.5.3] — init-recommended-mvp — 2026-03-27
+
+Introduced `init --recommended`: check results now drive the init flow automatically.
+Users no longer need to manually copy targets from the `check` recommendation output.
+
+### Added
+
+- `src/check/recommendations/computeRecommendations.js` — async bridge that runs checks on a project root and returns `{ recommendations, unmappedCount, invalidCount, issueCount }` without any console output
+- `--recommended` option on the `init` command — auto-selects targets from current project state
+
+### Changed
+
+- `src/cli/commands/init.js` — converted to `async`; added `--recommended` handling with explicit-target-wins priority policy; summary label distinguishes "recommended targets" from "selected targets"; final status line suffixed with "from recommendations" when applicable
+- `src/cli/index.js` — registered `--recommended` option on `init` command
+
+### Behavior
+
+| Mode | Behavior |
+|------|----------|
+| `init --recommended` | runs checks, applies recommended targets |
+| `init --recommended --dry-run` | same but no files written |
+| `init --recommended --targets foo` | explicit wins; `--recommended` ignored with notice |
+| No issues found | exits gracefully: "project looks healthy" |
+
+---
+
 ## [0.5.2] — suggested-init-flow-and-recommended-apply — 2026-03-27
 
 Separated recommendation calculation from command generation.
