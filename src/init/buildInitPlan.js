@@ -36,7 +36,11 @@ function buildInitPlan(projectRoot, opts = {}) {
 
   // 디렉터리 계획
   for (const dir of DIRECTORIES) {
-    if (neededDirPaths !== null && !neededDirPaths.has(dir.path)) continue;
+    if (filterByTarget) {
+      const inNeededPaths = neededDirPaths.has(dir.path);
+      const inDirTargets  = Array.isArray(dir.targets) && dir.targets.some(t => expandedTargets.includes(t));
+      if (!inNeededPaths && !inDirTargets) continue;
+    }
     const full   = path.join(projectRoot, dir.path);
     const exists = fs.existsSync(full);
     plan.push(makeItem(exists ? 'mkdir-skip' : 'mkdir', 'dir', dir.path));

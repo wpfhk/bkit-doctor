@@ -1,6 +1,6 @@
 {
   "name": "bkit-doctor",
-  "version": "0.1.0",
+  "version": "0.5.6",
   "description": "bkit 운영 환경 진단 CLI",
   "type": "commonjs",
   "main": "src/cli/index.js",

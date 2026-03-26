@@ -30,14 +30,14 @@ const TARGETS = {
   'policies-core':   '.claude/policies/ 정책 파일 4종',
 
   // 문서 (개별)
-  'docs-plan':       'docs/plan.md',
-  'docs-design':     'docs/design.md',
-  'docs-task':       'docs/task.md',
-  'docs-report':     'docs/report.md',
-  'docs-changelog':  'docs/changelog.md',
+  'docs-plan':       'docs/01-plan/ 디렉터리',
+  'docs-design':     'docs/02-design/ 디렉터리',
+  'docs-task':       'docs/03-task/ 디렉터리',
+  'docs-report':     'docs/04-report/ 디렉터리',
+  'docs-changelog':  'CHANGELOG.md (프로젝트 루트)',
 
   // 문서 묶음
-  'docs-core':       'docs/ 전체 (plan, design, task, report, changelog)',
+  'docs-core':       'docs/ 전체 (01-plan, 02-design, 03-task, 04-report, changelog)',
 };
 
 const VALID_TARGETS = new Set(Object.keys(TARGETS));

@@ -11,6 +11,38 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [0.5.7] — release-alignment-before-main-merge — 2026-03-27
+
+Resolved check/init structural mismatch and aligned version metadata before main merge.
+
+### Fixed
+
+- `init` now creates `docs/01-plan/`, `docs/02-design/`, `docs/03-task/`, `docs/04-report/` directories
+  — matching exactly what `check` expects (was incorrectly creating flat `.md` files)
+- `init --dry-run` on a healthy project now shows zero `[CREATE]` operations (was showing 5)
+- `docs-changelog` target now creates `CHANGELOG.md` at project root (was `docs/changelog.md`)
+
+### Changed
+
+- `src/init/scaffoldManifest.js` — replaced 4 docs flat-file entries with 4 directory entries;
+  changelog path changed to root `CHANGELOG.md`
+- `src/init/buildInitPlan.js` — directory filter extended to include dirs whose `targets[]`
+  intersects with the selected target set (enables directory-only targets without files)
+- `src/init/targetRegistry.js` — updated descriptions for all `docs-*` targets
+- `src/shared/remediationMap.js` — updated `fixHint` for all docs checkers
+- `package.json` — version `0.1.0` → `0.5.6` (aligned with README/CHANGELOG)
+
+### Verified
+
+| Command | Result |
+|---------|--------|
+| `check` | HEALTHY — PASS 14 |
+| `init --dry-run` | files created: 0, skipped: 21 |
+| `init --recommended --dry-run` | "no recommended targets — project looks healthy" |
+| `version` | `bkit-doctor v0.5.6 [windows]` |
+
+---
+
 ## [0.5.6] — recommendation-snapshot-and-cached-flow — 2026-03-27
 
 `bkit-doctor check` now saves a recommendation snapshot to

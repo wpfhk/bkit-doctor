@@ -23,7 +23,11 @@ const DIRECTORIES = [
   { path: '.claude/templates',              targets: ['templates-core'] },
   { path: '.claude/context',                targets: ['claude-root'] },
   { path: '.claude/policies',               targets: ['policies-core'] },
-  { path: 'docs',                           targets: ['docs-core', 'docs-plan', 'docs-design', 'docs-task', 'docs-report', 'docs-changelog'] },
+  { path: 'docs',           targets: ['docs-core', 'docs-plan', 'docs-design', 'docs-task', 'docs-report', 'docs-changelog'] },
+  { path: 'docs/01-plan',   targets: ['docs-plan'] },
+  { path: 'docs/02-design', targets: ['docs-design'] },
+  { path: 'docs/03-task',   targets: ['docs-task'] },
+  { path: 'docs/04-report', targets: ['docs-report'] },
 ];
 
 const FILES = [
@@ -57,12 +61,8 @@ const FILES = [
   { path: '.claude/policies/security-policy.md',      initTarget: 'policies-core', type: 'policy', name: 'security' },
   { path: '.claude/policies/documentation-policy.md', initTarget: 'policies-core', type: 'policy', name: 'documentation' },
 
-  // docs (개별 target)
-  { path: 'docs/plan.md',      initTarget: 'docs-plan',      type: 'doc', name: 'plan' },
-  { path: 'docs/design.md',    initTarget: 'docs-design',    type: 'doc', name: 'design' },
-  { path: 'docs/task.md',      initTarget: 'docs-task',      type: 'doc', name: 'task' },
-  { path: 'docs/report.md',    initTarget: 'docs-report',    type: 'doc', name: 'report' },
-  { path: 'docs/changelog.md', initTarget: 'docs-changelog', type: 'changelog' },
+  // docs-changelog: 루트 CHANGELOG.md (changelog.exists checker의 최우선 후보)
+  { path: 'CHANGELOG.md', initTarget: 'docs-changelog', type: 'changelog' },
 ];
 
 /**
