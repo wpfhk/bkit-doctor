@@ -1,17 +1,17 @@
 # Current Status
 
 ## Active Phase
-`phase-01-cli-foundation` — **완료**
+`phase-03-3-output-init-mapping` — **완료**
 
 ## Last Change
-2026-03-26: Phase 1 완료 — CLI skeleton v0.1.0
+2026-03-27: Phase 3-3 완료 — formatter 분리 + missing 표준화 + remediationMap v0.3.3
 
 ## Current State
-Phase 1 Report 작성 완료. Phase 2 대기.
+Phase 3 Report 작성 완료. Phase 4 대기.
 
 ## Current Risk
-- Windows 환경 shebang 미검증
-- `doctor` / `init` 실제 로직 미구현 (예정대로 Phase 2~3)
+- `init` 명령 stub 상태 — Phase 4에서 구현
+- Windows shebang 전역 설치 미검증 — Phase 9에서 확인
 
 ## Next Action
-Phase 2 시작: `phase-02-cli-skeleton` — doctor/check 서브커맨드 구조 + 진단 모듈 인터페이스
+Phase 4 시작: `phase-04-init-command` — init 명령으로 .claude/ 기본 구조 자동 생성

@@ -4,8 +4,8 @@
 |---|-------|---------|--------|------------|
 | 00 | environment-setup | bkit 운영 환경 세팅 (.claude/ 구조 완성) | **done** | — |
 | 01 | cli-foundation | CLI skeleton 설계 및 초기 구현 | **done** | phase-00 |
-| 02 | cli-skeleton | 커맨드 라우팅, 진단 모듈 인터페이스, 기본 출력 | **pending** | phase-01 |
-| 03 | init-doctor-mvp | 핵심 진단 항목 구현, MVP 동작 확인 | **pending** | phase-02 |
+| 02 | cli-skeleton | 커맨드 라우팅, 진단 모듈 인터페이스, 기본 출력 | **done** | phase-01 |
+| 03 | init-doctor-mvp | 핵심 진단 항목 구현, MVP 동작 확인 | **done** | phase-02 |
 
 ## Status Legend
 - `done` — 완료
