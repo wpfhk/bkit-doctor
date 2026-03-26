@@ -11,6 +11,40 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [0.5.2] — suggested-init-flow-and-recommended-apply — 2026-03-27
+
+Separated recommendation calculation from command generation.
+`SuggestedFlow` is now a model object; the formatter renders it — not string-builds it.
+
+### Added
+
+- `src/check/recommendations/suggestedFlowModel.js` — `SuggestedFlow` typedef and `makeSuggestedFlow()` helper generating both `applyCommand` and `previewCommand`
+- `src/check/recommendations/buildSuggestedFlow.js` — `buildSuggestedFlow(recommendations, issueCount)` producing a `SuggestedFlow|null` from sorted recommendations
+- `TARGET_PRIORITY` exported from `buildRecommendations.js` for use by formatters and tests
+
+### Changed
+
+- `src/check/recommendations/buildRecommendations.js` — added `TARGET_PRIORITY` constant and priority-based sort; validates targets against `VALID_TARGETS`; returns `invalidCount` alongside `unmappedCount`
+- `src/check/formatters/defaultFormatter.js` — integrates `buildSuggestedFlow`; displays `flow.applyCommand` and `flow.previewCommand` as separate "Recommended next step" / "Preview first" lines; shows `invalidCount` when non-zero
+
+---
+
+## [0.5.1] — check-recommendation-flow — 2026-03-27
+
+Introduced recommendation engine: `check` results now suggest which `init` targets to run.
+
+### Added
+
+- `src/check/recommendations/recommendationModel.js` — `Recommendation` typedef and `makeRecommendation()` helper
+- `src/check/recommendations/buildRecommendations.js` — filters warn/fail results, dedupes by `initTarget`, validates against `VALID_TARGETS`, returns sorted recommendations
+
+### Changed
+
+- `src/shared/remediationMap.js` — added `label` and `description` fields to all 13 entries
+- `src/check/formatters/defaultFormatter.js` — appended recommendation section with recommended next-step command
+
+---
+
 ## [0.4.2] — selective-apply-and-remediation — 2026-03-27
 
 Expanded `init` from a full-scaffold tool into a targeted, selective apply system.
