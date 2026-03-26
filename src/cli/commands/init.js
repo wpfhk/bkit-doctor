@@ -4,8 +4,11 @@ const path = require('path');
 const { buildInitPlan }              = require('../../init/buildInitPlan');
 const { applyInitPlan }              = require('../../init/applyInitPlan');
 const { validateTargets, suggestTarget, TARGETS } = require('../../init/targetRegistry');
-const { computeRecommendations }     = require('../../check/recommendations/computeRecommendations');
-const { confirmApply }               = require('../../init/confirmApply');
+const { computeRecommendations }             = require('../../check/recommendations/computeRecommendations');
+const { confirmApply }                       = require('../../init/confirmApply');
+const { buildRecommendationFingerprint }     = require('../../check/recommendations/buildRecommendationFingerprint');
+const { loadRecommendationSnapshot }         = require('../../check/recommendations/loadRecommendationSnapshot');
+const { validateRecommendationSnapshot }     = require('../../check/recommendations/validateRecommendationSnapshot');
 
 /**
  * init 명령 핸들러 — Phase 5-4: confirm-before-apply
@@ -27,6 +30,7 @@ async function initCommand(options) {
   const backupDir      = options.backupDir || undefined;
   const useRecommended = Boolean(options.recommended);
   const autoYes        = Boolean(options.yes);
+  const fresh          = Boolean(options.fresh);
 
   // ── target 수집 ──────────────────────────────────────────
   let rawTargets      = collectTargets(options);
@@ -38,26 +42,54 @@ async function initCommand(options) {
       console.log(`[targets] ${rawTargets.join(', ')}`);
     } else {
       console.log(`[bkit-doctor] init: ${projectRoot}`);
-      console.log('[recommended] running checks to calculate targets...');
 
-      const { recommendations, issueCount, invalidCount } =
-        await computeRecommendations(projectRoot);
+      // ── snapshot 재사용 시도 ────────────────────────────
+      let usedSnapshot = false;
+      if (!fresh) {
+        const fingerprint = buildRecommendationFingerprint(projectRoot);
+        const snapshot    = loadRecommendationSnapshot(projectRoot);
+        const { valid, reason } = validateRecommendationSnapshot(snapshot, projectRoot, fingerprint);
 
-      if (recommendations.length === 0) {
-        console.log('');
-        if (issueCount === 0) {
-          console.log('no recommended targets — project looks healthy');
-        } else {
-          console.log('nothing to apply from recommendations');
-          if (invalidCount > 0)
-            console.log(`(${invalidCount} target(s) were invalid and excluded)`);
+        if (valid) {
+          console.log('[recommended] using recent recommendation snapshot');
+          if (snapshot.finalTargets.length === 0) {
+            console.log('');
+            console.log('no recommended targets — project looks healthy');
+            return;
+          }
+          rawTargets      = snapshot.finalTargets;
+          fromRecommended = true;
+          usedSnapshot    = true;
+          console.log(`[recommended] ${rawTargets.length} targets: ${rawTargets.join(', ')}`);
+        } else if (snapshot) {
+          // snapshot 있지만 유효하지 않음
+          console.log(`[recommended] snapshot invalid (${reason}), recomputing...`);
         }
-        return;
+      } else {
+        console.log('[recommended] --fresh: ignoring snapshot, recomputing...');
       }
 
-      rawTargets = recommendations.map(r => r.target);
-      fromRecommended = true;
-      console.log(`[recommended] ${rawTargets.length} targets: ${rawTargets.join(', ')}`);
+      // ── fresh computation (snapshot 없거나 invalid) ─────
+      if (!usedSnapshot) {
+        const { recommendations, issueCount, invalidCount } =
+          await computeRecommendations(projectRoot);
+
+        if (recommendations.length === 0) {
+          console.log('');
+          if (issueCount === 0) {
+            console.log('no recommended targets — project looks healthy');
+          } else {
+            console.log('nothing to apply from recommendations');
+            if (invalidCount > 0)
+              console.log(`(${invalidCount} target(s) were invalid and excluded)`);
+          }
+          return;
+        }
+
+        rawTargets      = recommendations.map(r => r.target);
+        fromRecommended = true;
+        console.log(`[recommended] ${rawTargets.length} targets: ${rawTargets.join(', ')}`);
+      }
     }
   }
 

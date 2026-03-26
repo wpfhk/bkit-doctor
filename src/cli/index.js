@@ -36,6 +36,7 @@ program
   .option('--target <name>',         '특정 target만 생성 (반복 사용 가능)', collect, [])
   .option('--targets <list>',        '쉼표 구분 target 목록 (예: hooks-json,skills-core)')
   .option('--recommended',           '현재 프로젝트 상태 기반 추천 target 자동 적용')
+  .option('--fresh',                 '--recommended 시 snapshot 무시하고 재계산')
   .option('-y, --yes',               '확인 prompt 생략 (자동 진행)')
   .action(initCommand);
 

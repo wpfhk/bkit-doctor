@@ -1,8 +1,9 @@
 'use strict';
 
-const { CheckerRunner }    = require('../../core/checker');
-const { DEFAULT_CHECKERS } = require('../../checkers/index');
-const { format }           = require('../../check/formatters/defaultFormatter');
+const { CheckerRunner }                = require('../../core/checker');
+const { DEFAULT_CHECKERS }             = require('../../checkers/index');
+const { format }                       = require('../../check/formatters/defaultFormatter');
+const { saveRecommendationSnapshot }   = require('../../check/recommendations/saveRecommendationSnapshot');
 
 async function checkCommand(options) {
   const targetPath = options.path || process.cwd();
@@ -18,6 +19,9 @@ async function checkCommand(options) {
   }
 
   format(targetPath, results);
+
+  // recommendation snapshot 저장 (silent on failure)
+  saveRecommendationSnapshot(targetPath, results);
 }
 
 module.exports = { checkCommand };
