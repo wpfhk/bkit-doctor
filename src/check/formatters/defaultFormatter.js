@@ -1,6 +1,7 @@
 'use strict';
 
-const { REMEDIATION_MAP } = require('../../shared/remediationMap');
+const { REMEDIATION_MAP }      = require('../../shared/remediationMap');
+const { buildRecommendations } = require('../recommendations/buildRecommendations');
 
 const STATUS_LABEL = { pass: '[PASS]', warn: '[WARN]', fail: '[FAIL]' };
 const CAT_ICON     = { ok: '✓', warn: '!', fail: '✗' };
@@ -16,11 +17,17 @@ function overallStatus(pass, warn, fail) {
   return 'HEALTHY';
 }
 
-/** remediationMap의 fixHint / initTarget 주입 */
+/** remediationMap의 fixHint / initTarget / label / description 주입 */
 function enrich(results) {
   return results.map(r => {
     const rem = REMEDIATION_MAP[r.id] || {};
-    return { ...r, fixHint: rem.fixHint, initTarget: rem.initTarget };
+    return {
+      ...r,
+      fixHint:     rem.fixHint,
+      initTarget:  rem.initTarget,
+      label:       rem.label,
+      description: rem.description,
+    };
   });
 }
 
@@ -92,6 +99,38 @@ function format(targetPath, rawResults) {
   console.log('');
   console.log('──────────────────────────────────────');
   console.log(`총 ${results.length}개 — PASS ${pass} / WARN ${warn} / FAIL ${fail}   상태: ${status}`);
+
+  // ── 추천 ──
+  const { recommendations, unmappedCount } = buildRecommendations(results);
+
+  if (recommendations.length === 0) {
+    if (warn > 0 || fail > 0) {
+      // 문제는 있으나 자동 추천 불가 (unmapped)
+      console.log('');
+      console.log('──── 추천 ' + '─'.repeat(30));
+      console.log('  추천 가능한 init target이 없습니다.');
+      if (unmappedCount > 0) {
+        console.log(`  (${unmappedCount}개 항목은 자동 추천 대상이 아닙니다)`);
+      }
+    }
+    return;
+  }
+
+  const targetNames = recommendations.map(r => r.target);
+
+  console.log('');
+  console.log('──── 추천 ' + '─'.repeat(30));
+  console.log(`  ${recommendations.length}개 추천 target (${warn + fail}개 문제 기반)`);
+  console.log('');
+
+  for (const rec of recommendations) {
+    const desc = rec.description ? ` — ${rec.description}` : '';
+    console.log(`  • ${rec.target}${desc}`);
+  }
+
+  console.log('');
+  console.log(`  Recommended next step:`);
+  console.log(`  bkit-doctor init --targets ${targetNames.join(',')}`);
 }
 
 module.exports = { format };
