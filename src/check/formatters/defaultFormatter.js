@@ -2,6 +2,7 @@
 
 const { REMEDIATION_MAP }      = require('../../shared/remediationMap');
 const { buildRecommendations } = require('../recommendations/buildRecommendations');
+const { buildSuggestedFlow }   = require('../recommendations/buildSuggestedFlow');
 
 const STATUS_LABEL = { pass: '[PASS]', warn: '[WARN]', fail: '[FAIL]' };
 const CAT_ICON     = { ok: '✓', warn: '!', fail: '✗' };
@@ -101,9 +102,10 @@ function format(targetPath, rawResults) {
   console.log(`총 ${results.length}개 — PASS ${pass} / WARN ${warn} / FAIL ${fail}   상태: ${status}`);
 
   // ── 추천 ──
-  const { recommendations, unmappedCount } = buildRecommendations(results);
+  const { recommendations, unmappedCount, invalidCount } = buildRecommendations(results);
+  const flow = buildSuggestedFlow(recommendations, warn + fail);
 
-  if (recommendations.length === 0) {
+  if (!flow) {
     if (warn > 0 || fail > 0) {
       // 문제는 있으나 자동 추천 불가 (unmapped)
       console.log('');
@@ -116,8 +118,6 @@ function format(targetPath, rawResults) {
     return;
   }
 
-  const targetNames = recommendations.map(r => r.target);
-
   console.log('');
   console.log('──── 추천 ' + '─'.repeat(30));
   console.log(`  ${recommendations.length}개 추천 target (${warn + fail}개 문제 기반)`);
@@ -128,9 +128,16 @@ function format(targetPath, rawResults) {
     console.log(`  • ${rec.target}${desc}`);
   }
 
+  if (invalidCount > 0) {
+    console.log(`  (${invalidCount}개 항목은 유효하지 않은 target으로 제외)`);
+  }
+
   console.log('');
-  console.log(`  Recommended next step:`);
-  console.log(`  bkit-doctor init --targets ${targetNames.join(',')}`);
+  console.log('  Recommended next step:');
+  console.log(`  ${flow.applyCommand}`);
+  console.log('');
+  console.log('  Preview first:');
+  console.log(`  ${flow.previewCommand}`);
 }
 
 module.exports = { format };
