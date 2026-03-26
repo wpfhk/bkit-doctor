@@ -11,6 +11,35 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [0.5.8] — release-verification-script — 2026-03-27
+
+Added automated release readiness verification script.
+
+### Added
+
+- `scripts/verify-release.js` — 8-check release verification script (Node.js, cross-platform)
+  - Hard checks: version, check healthy, init dry-run CREATE=0, recommended dry-run healthy,
+    changelog alignment, docs path consistency, project files
+  - Soft check: snapshot flow (check → init --recommended reuse)
+  - `--verbose` / `-v` flag for per-check CLI output excerpts
+  - exit code 0 = all pass, 1 = any hard fail
+- `package.json` `scripts.verify-release` — `node scripts/verify-release.js`
+
+### Changed
+
+- `package.json` version `0.5.6` → `0.5.7` (aligned with CHANGELOG [0.5.7] entry)
+- README version badges `0.5.6` → `0.5.7` (5 language files)
+
+### Usage
+
+```bash
+npm run verify-release
+# or
+node scripts/verify-release.js --verbose
+```
+
+---
+
 ## [0.5.7] — release-alignment-before-main-merge — 2026-03-27
 
 Resolved check/init structural mismatch and aligned version metadata before main merge.
