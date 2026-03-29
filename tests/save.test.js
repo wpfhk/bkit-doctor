@@ -76,7 +76,8 @@ test('globalConfigPath: respects BKIT_DOCTOR_GLOBAL_CONFIG_DIR', () => {
   if (original === undefined) delete process.env.BKIT_DOCTOR_GLOBAL_CONFIG_DIR;
   else process.env.BKIT_DOCTOR_GLOBAL_CONFIG_DIR = original;
 
-  assert.ok(p.startsWith('/tmp/test-global'));
+  // Windows normalizes /tmp/test-global → C:\tmp\test-global, so use includes
+  assert.ok(p.includes('test-global'), `expected path to contain "test-global", got: ${p}`);
   assert.ok(p.endsWith('settings.global.json'));
 });
 
@@ -189,10 +190,10 @@ test('save --both --preset lean: both files written', () => {
   assert.strictEqual(globalData.presetName, 'lean');
 });
 
-test('save --local --recommended: success message includes "settings updated"', () => {
+test('save --local --recommended: success message includes "Saved"', () => {
   const projectDir = makeTempDir();
   const r = runSave(['--local', '--recommended'], { projectDir });
-  assert.ok(r.stdout.includes('settings updated'), r.stdout);
+  assert.ok(r.stdout.includes('Saved'), r.stdout);
 });
 
 test('save --global --preset default: success message includes preset name', () => {
