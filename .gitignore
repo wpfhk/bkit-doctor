@@ -93,11 +93,8 @@ $RECYCLE.BIN/
 # ========================
 # npm / pnpm / yarn
 # ========================
-package-lock.json
 pnpm-lock.yaml
 yarn.lock
-
-# (원하면 lock 포함 가능)
 
 # ========================
 # Test / coverage
