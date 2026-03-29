@@ -1,6 +1,6 @@
 # bkit-doctor
 
-> Diagnose, scaffold, and maintain your Claude Code project structure from the command line.
+> Diagnose, scaffold, and maintain your AI-assisted project structure from the command line.
 
 ![npm version](https://img.shields.io/npm/v/bkit-doctor)
 ![license](https://img.shields.io/npm/l/bkit-doctor)
@@ -13,23 +13,27 @@
 
 ## What is bkit-doctor?
 
-**bkit-doctor** checks whether your Claude Code project has the right structure — `.claude/` directory, hooks, settings, agent definitions, skill files, templates, policies, and documentation scaffolds — and fixes what's missing automatically.
+When you build projects with AI coding tools — Claude Code, Cursor, Copilot, and others — project structure tends to drift. Context files go missing, documentation scaffolds are incomplete, and configuration gets out of sync. Over time, the AI loses the structured context it needs to be effective.
 
-Think of it as **ESLint for your Claude Code project layout**: it runs 14 diagnostic checks, reports pass/warn/fail for each item, and can scaffold everything that's missing in one command.
+**bkit-doctor** diagnoses these structural issues and fixes them automatically. It checks whether your project has the right directories, config files, agent definitions, skill files, templates, policies, and documentation scaffolds — then scaffolds everything that's missing in one command.
+
+Think of it as **ESLint for your project layout**: 14 diagnostic checks, pass/warn/fail for each item, and one-command auto-fix.
 
 ```bash
 npx bkit-doctor check          # diagnose your project
 npx bkit-doctor fix --yes      # auto-fix everything
 ```
 
+bkit-doctor was built on the [bkit](https://github.com/popup-studio-ai/bkit-claude-code) PDCA workflow methodology, but works independently — no bkit installation required.
+
 ---
 
 ## Who is this for?
 
-- **Any Claude Code user** — verify that your project has the structure Claude Code expects (`.claude/`, `CLAUDE.md`, hooks, settings)
+- **AI-assisted development users** — verify that your project has the structure AI coding tools expect (`.claude/`, `CLAUDE.md`, hooks, settings)
 - **Teams adopting structured AI workflows** — scaffold agents, skills, templates, policies, and PDCA documentation in seconds
 - **CI pipelines** — `bkit-doctor check` exits with code 1 on critical failures, so you can gate deployments on project health
-- **bkit users** — if you follow the [bkit](https://github.com/anthropics/bkit) PDCA workflow, bkit-doctor validates and bootstraps the full environment
+- **bkit users** — if you follow the [bkit](https://github.com/popup-studio-ai/bkit-claude-code) PDCA workflow, bkit-doctor validates and bootstraps the full environment
 
 ---
 
@@ -47,6 +51,15 @@ npm install --save-dev bkit-doctor
 ```
 
 Requires **Node.js >= 18**.
+
+### Run from source
+
+```bash
+git clone https://github.com/dotoricode/bkit-doctor.git
+cd bkit-doctor
+npm install
+npm link
+```
 
 ---
 
@@ -171,14 +184,20 @@ bkit-doctor --version     # version number only
 
 `bkit-doctor check` returns exit code 1 when critical structure is missing, making it suitable for CI gates:
 
-```bash
-# GitHub Actions example
-- name: Check Claude Code project health
-  run: npx bkit-doctor check --path .
-
-# Shell script
-bkit-doctor check || { echo "Project health check failed"; exit 1; }
+```yaml
+# GitHub Actions
+- name: Check project structure
+  run: npx bkit-doctor check
 ```
+
+```bash
+# Shell script
+bkit-doctor check || { echo "Structure check failed"; exit 1; }
+```
+
+Exit code behavior:
+- **Hard FAIL** (`.claude/` or `CLAUDE.md` missing) → exit 1, CI fails
+- **Soft FAIL** (warnings only) → exit 0, CI passes
 
 ---
 
@@ -204,7 +223,7 @@ bkit-doctor check || { echo "Project health check failed"; exit 1; }
 
 ## What is bkit?
 
-[bkit](https://github.com/anthropics/bkit) is a PDCA-based development workflow framework for Claude Code. It provides structured phases (Plan, Design, Do, Check, Report), agent teams, and quality gates for AI-native development.
+[bkit](https://github.com/popup-studio-ai/bkit-claude-code) is a PDCA-based development workflow framework for Claude Code. It provides structured phases (Plan, Design, Do, Check, Report), agent teams, and quality gates for AI-native development.
 
 **bkit-doctor works with or without bkit:**
 
@@ -216,7 +235,9 @@ bkit-doctor check || { echo "Project health check failed"; exit 1; }
 | `preset` — workflow-optimized bundles | Partial | Full |
 | `save` / `load` — settings persistence | Yes | Yes |
 
-The core commands (`check`, `init`, `fix`) are useful for any Claude Code project. Presets and advanced scaffolding targets are optimized for the bkit PDCA workflow.
+The core commands (`check`, `init`, `fix`) are useful for any AI-assisted project. Presets and advanced scaffolding targets are optimized for the bkit PDCA workflow.
+
+Learn more about bkit: https://github.com/popup-studio-ai/bkit-claude-code
 
 ---
 
@@ -255,7 +276,7 @@ bkit-doctor/
 
 > **bkit-doctor is an independent project.** It is not an official bkit plugin and has no affiliation with the bkit team.
 
-bkit-doctor was inspired by [bkit](https://github.com/anthropics/bkit) — a PDCA-based AI-native development workflow. The author learned structured AI collaboration through bkit's materials, and that knowledge shaped this tool's design.
+bkit-doctor was inspired by [bkit](https://github.com/popup-studio-ai/bkit-claude-code) — a PDCA-based AI-native development workflow. The author learned structured AI collaboration through bkit's materials, and that knowledge shaped this tool's design.
 
 bkit-doctor does **not** include bkit code, does **not** require bkit to function, and is **not** endorsed or maintained by the bkit team.
 
@@ -280,7 +301,7 @@ Apache License 2.0 — see [LICENSE](LICENSE) for full terms.
 
 ## Acknowledgements
 
-- **[bkit](https://github.com/anthropics/bkit)** — for the workflow philosophy that inspired this project
+- **[bkit](https://github.com/popup-studio-ai/bkit-claude-code)** — for the workflow philosophy that inspired this project
 - The open-source community — for the tools and patterns this project builds on
 
 ---
