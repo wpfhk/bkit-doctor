@@ -22,6 +22,12 @@ async function checkCommand(options) {
 
   // recommendation snapshot 저장 (silent on failure)
   saveRecommendationSnapshot(targetPath, results);
+
+  // hard(severity: error) FAIL이 하나라도 있으면 exit code 1
+  const hasHardFail = results.some(r => r.severity === 'error' && r.status === 'fail');
+  if (hasHardFail) {
+    process.exitCode = 1;
+  }
 }
 
 module.exports = { checkCommand };
