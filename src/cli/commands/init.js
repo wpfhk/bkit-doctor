@@ -232,7 +232,7 @@ async function initCommand(options) {
 
   // ── 6. apply ─────────────────────────────────────────────
   const { applied, skipped, backupSession } =
-    applyInitPlan(projectRoot, plan, { backup, backupDir });
+    applyInitPlan(projectRoot, plan, { backup, backupDir, preset: usePreset || undefined });
 
   // ── 7. 요약 출력 ─────────────────────────────────────────
   const mkdirCount     = applied.filter(i => i.kind === 'dir').length;
