@@ -69,6 +69,9 @@ $RECYCLE.BIN/
 # bkit runtime state (audit 로그, session history, memory)
 .bkit/
 
+# bkit-doctor local runtime state / cache / settings
+.bkit-doctor/
+
 # state는 버전관리 제외 (작업 상태 파일)
 .claude/state/
 
@@ -90,11 +93,8 @@ $RECYCLE.BIN/
 # ========================
 # npm / pnpm / yarn
 # ========================
-package-lock.json
 pnpm-lock.yaml
 yarn.lock
-
-# (원하면 lock 포함 가능)
 
 # ========================
 # Test / coverage

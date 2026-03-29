@@ -11,6 +11,212 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [1.0.0] — v1.0.0 release — 2026-03-30
+
+First stable release. All core CLI commands complete, tested, and documented.
+
+### Added
+
+- **Exit code support** — `check` returns exit 1 when hard checks (`.claude/`, `CLAUDE.md`) fail; CI-friendly
+- **Preset-aware content generation** — scaffold content varies by preset (`default` produces detailed agent/skill descriptions, `lean` produces compact placeholders)
+- **npm publish metadata** — `files`, `repository`, `homepage`, `bugs` fields in package.json
+- **`package-lock.json`** tracked for reproducible installs
+- **Test suite expansion** — 167 tests total (+34 new)
+  - `check.test.js` (15): CheckerRunner unit tests, exit code verification, hard/soft severity
+  - `init.test.js` (12): dry-run, file creation, overwrite safety, preset, typo hints
+  - `fix-cli.test.js` (7): auto-remediation, fix→check integration, FAIL count reduction
+
+### Changed
+
+- **README rewritten** for universal audience (not just bkit users)
+  - "ESLint for your Claude Code project layout" positioning
+  - "Who is this for?" / "What problem does it solve?" sections
+  - All 7 commands documented with examples
+  - CI usage section with GitHub Actions example
+  - npm dynamic badges
+- **Localized READMEs** (ko, ja, zh, es) synced with English structure
+- **`save.test.js`** — fixed 2 failing assertions (Windows path normalization, v0.7.0 message format)
+- **`package.json` description** — English, universal value proposition
+- **`severity` field** now passed through `CheckerRunner` results
+
+### Removed
+
+- **`src/checks/`** empty placeholder directory (consolidated into `src/checkers/`)
+- **"Work in progress"** notice from README
+
+---
+
+## [0.7.0] — cli-refactor-load — 2026-03-27
+
+Phase 07-3: CLI를 init/fix/save/load 4개 명령 중심으로 정리하고 `load` 커맨드 구현.
+
+### Added
+
+- **`load` command** — 저장된 bkit-doctor 설정을 현재 프로젝트에 적용
+  - `load --local` — 로컬 설정 확인 및 재적용
+  - `load --global` — 글로벌 설정을 현재 프로젝트 local에 적용
+  - `load --file <path>` — 지정 파일 설정을 현재 프로젝트 local에 적용
+  - 적용 대상: `.bkit-doctor/settings.local.json` (OS/shell/secrets 제외)
+  - 소스 없음 / 설정 없음 / 파일 없음 → 명확한 에러 메시지
+- **`src/config/loadConfig.js`** — 설정 파일 로드 + 스키마 검증 헬퍼
+- **`tests/load.test.js`** — 단위 + CLI 통합 테스트 (11 cases)
+
+### Changed
+
+- **`save` command** — 성공 메시지 명확화
+  - 기존: `settings updated` + 경로 + 모드 분리 출력
+  - 변경: `Saved local bkit-doctor settings (recommended mode)` 형식
+- **`load` command** 등록 (`src/cli/index.js`)
+- **`verify-release.js`** — Phase 7-3 체크 8개 추가 (total: 38)
+  - `load local config`, `load global config`, `load file config`
+  - `load missing guard`, `load no config guard`, `save-load roundtrip`
+  - `init compatibility`, `fix compatibility`
+
+### Design decisions
+
+- `load`는 항상 `.bkit-doctor/settings.local.json`에 기록 (적용 범위 단일화)
+- `preset` 서브커맨드는 내부 유틸로 유지 (4개 primary 명령에서 분리)
+- save/load 스키마: `{ defaultMode, presetName? }` 그대로 유지
+
+---
+
+## [0.6.4] — save-command — 2026-03-27
+
+Phase 06-5: 기본 동작 설정 저장 `save` 커맨드 추가.
+
+### Added
+
+- **`save` command** — 기본 동작 선호를 local / global / both 범위로 저장
+  - `save --local --recommended` — 이 프로젝트에서 추천 기반 흐름을 기본값으로 저장
+  - `save --global --preset <name>` — 전역 기본 preset 저장
+  - `save --both --preset <name>` — local + global 둘 다 저장
+  - `--local --global` 동시 사용 금지 (→ `--both` 사용 권장)
+  - `--recommended --preset` 동시 사용 금지 (상호 배타)
+  - 존재하지 않는 preset은 명확한 에러 메시지로 거부
+- **`src/config/configPaths.js`** — local/global 설정 파일 경로 상수
+  - `BKIT_DOCTOR_GLOBAL_CONFIG_DIR` 환경 변수로 global 경로 재지정 가능 (테스트 용)
+- **`src/config/saveConfig.js`** — 설정 파일 읽기/쓰기 (saveConfig / readConfig)
+- **`tests/save.test.js`** — 단위 + CLI 통합 테스트 (26 cases)
+- **`verify-release.js`** — Phase 6-5 체크 6종 추가
+
+### Changed
+
+- `src/cli/index.js` — `save` top-level 커맨드 등록
+- `package.json` — version 0.6.4; `test:save` script 추가
+
+### Config 스키마
+
+```json
+{ "defaultMode": "recommended" }
+{ "defaultMode": "preset", "presetName": "default" }
+```
+
+저장 위치:
+- local: `.bkit-doctor/settings.local.json`
+- global: `~/.bkit-doctor/settings.global.json`
+
+---
+
+## [0.6.3] — preset-scoring — 2026-03-27
+
+Phase 06-4: preset recommend에 scoring / ranking / match label 추가.
+
+### Added
+
+- **score 기반 ranking** — 각 추천 항목에 score(0~100) 및 match label 포함
+  - match label: `high match` (80+) / `medium match` (50~79) / `low match` (0~49)
+  - score 내림차순 정렬, 상위 3개 반환
+- **`src/preset/presetScoring.js`** — computePresetScores / getMatchLabel / clampScore
+  - lean / workflow-core / docs / default 각각 규칙 기반 score 계산
+  - 동일 입력 → 동일 출력 (deterministic)
+- **`tests/preset-recommend.test.js`** — Phase 6-4 테스트 18 케이스 추가 (총 46 케이스)
+- **`verify-release.js`** — Phase 6-4 체크 4종 추가 (scoring output / order / label / regression)
+
+### Changed
+
+- `src/preset/presetRecommend.js` — `recommendPresets()` 반환형에 `score` / `label` 필드 추가
+- `src/cli/commands/preset.js` — `preset recommend` 출력에 score + match label 표시
+- `package.json` — version 0.6.3
+
+---
+
+## [0.6.2] — preset-recommend — 2026-03-27
+
+Phase 06-3: preset recommend 기능 + 선택 가이드(guidance) UX.
+
+### Added
+
+- **`preset recommend`** — 현재 프로젝트 상태 기반 rule-based preset 추천
+  - snapshot 재사용 또는 recompute (resolveFixTargets 재사용)
+  - 최대 3개 추천 (reason + targets + apply hint 포함)
+  - 항상 guidance 출력 (`fix` vs `init --preset`)
+  - `--fresh` 옵션 지원
+  - 절대 자동 적용하지 않음
+- **`workflow-core` preset** — 워크플로우 구조 번들 (agents + skills + templates + policies)
+- **`src/preset/presetRecommend.js`** — classifyTargets + recommendPresets (rule-based)
+- **`tests/preset-recommend.test.js`** — 단위 + CLI 통합 테스트 (28 cases)
+- **`verify-release.js`** — Phase 6-3 체크 3종 추가
+
+### Changed
+
+- `src/init/presetRegistry.js` — `workflow-core` preset 추가
+- `src/cli/commands/preset.js` — `presetRecommendCommand` 추가
+- `src/cli/index.js` — `preset recommend` 서브커맨드 등록
+- `package.json` — version 0.6.2; `test:preset-recommend` script 추가
+
+---
+
+## [0.6.1] — preset-discovery — 2026-03-27
+
+Phase 06-2: preset 탐색 기능 (list / show) + preset metadata 구조 개선.
+
+### Added
+
+- **`preset list`** — 사용 가능한 preset 목록 표시 (name + description)
+- **`preset show <name>`** — 특정 preset 상세 정보 표시 (name / description / targets / apply hint)
+  - 존재하지 않는 preset: non-zero exit + 에러 메시지 + 가능 목록 안내
+- **`getPreset(name)`** — name 포함 전체 메타데이터 반환 (presetRegistry 신규 API)
+- **`src/cli/commands/preset.js`** — presetListCommand / presetShowCommand
+- **`tests/preset-command.test.js`** — CLI 통합 + getPreset 단위 테스트 (23 cases)
+- **`verify-release.js`** — Phase 6-2 체크 4종 추가 (preset list / show default / show unknown / compatibility)
+
+### Changed
+
+- `src/init/presetRegistry.js` — `getPreset(name)` 추가 (`resolvePreset` backward compat 유지)
+- `src/cli/index.js` — `preset` 커맨드 그룹 등록 (list / show 서브커맨드)
+- `package.json` — version 0.6.1; `test:preset-command` script 추가
+
+---
+
+## [0.6.0] — fix-and-preset — 2026-03-27
+
+Phase 06-1: fix command + init --preset support.
+
+### Added
+
+- **`fix` command** — recommendation-based apply shortcut
+  - Snapshot reuse → invalid fallback → recompute flow
+  - Options: `--dry-run`, `--yes` / `-y`, `--fresh`
+  - `--fresh` forces recompute from current project state
+  - Safety: overwrite blocked, confirm required without `--yes`
+- **`init --preset <name>`** — predefined target bundle apply
+  - Preset registry: `default`, `lean`, `docs`
+  - Unknown preset: clear error + available presets list
+  - Conflict rules: `--preset + --recommended` and `--preset + --target/--targets` → exit 1
+- **`src/init/presetRegistry.js`** — preset definitions and validation
+- **`src/fix/resolveFixTargets.js`** — snapshot/recompute orchestration for fix
+- **Test suite** — Node.js built-in `node:test` (27 tests, 0 failures)
+  - `tests/preset.test.js` (17 cases)
+  - `tests/fix.test.js` (10 cases)
+
+### Changed
+
+- `src/cli/index.js` — register `fix` command; add `--preset` option to `init`
+- `src/cli/commands/init.js` — add preset resolution block and input mode conflict checks
+- `package.json` — version 0.6.0; add `test`, `test:preset`, `test:fix` scripts
+
+---
+
 ## [0.5.8] — release-verification-script — 2026-03-27
 
 Added automated release readiness verification script.

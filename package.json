@@ -1,17 +1,41 @@
 {
   "name": "bkit-doctor",
-  "version": "0.5.8",
-  "description": "bkit 운영 환경 진단 CLI",
+  "version": "1.0.0",
+  "description": "Diagnose, scaffold, and maintain Claude Code project structure",
   "type": "commonjs",
   "main": "src/cli/index.js",
   "bin": {
     "bkit-doctor": "src/cli/index.js"
   },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
   "scripts": {
     "start": "node src/cli/index.js",
     "doctor": "node src/cli/index.js doctor",
     "version:check": "node src/cli/index.js --version",
-    "verify-release": "node scripts/verify-release.js"
+    "verify-release": "node scripts/verify-release.js",
+    "test": "node --test tests/*.test.js",
+    "test:preset": "node --test tests/preset.test.js",
+    "test:fix": "node --test tests/fix.test.js",
+    "test:preset-command": "node --test tests/preset-command.test.js",
+    "test:preset-recommend": "node --test tests/preset-recommend.test.js",
+    "test:save": "node --test tests/save.test.js",
+    "test:load": "node --test tests/load.test.js",
+    "test:check": "node --test tests/check.test.js",
+    "test:init": "node --test tests/init.test.js",
+    "test:fix-cli": "node --test tests/fix-cli.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dotoricode/bkit-doctor.git"
+  },
+  "homepage": "https://github.com/dotoricode/bkit-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/dotoricode/bkit-doctor/issues"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -19,6 +43,14 @@
   "dependencies": {
     "commander": "^12.0.0"
   },
-  "keywords": ["bkit", "claude-code", "cli", "doctor"],
+  "keywords": [
+    "bkit",
+    "claude-code",
+    "doctor",
+    "cli",
+    "diagnostics",
+    "scaffolding",
+    "project-health"
+  ],
   "license": "Apache-2.0"
 }

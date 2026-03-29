@@ -9,6 +9,7 @@ const { confirmApply }                       = require('../../init/confirmApply'
 const { buildRecommendationFingerprint }     = require('../../check/recommendations/buildRecommendationFingerprint');
 const { loadRecommendationSnapshot }         = require('../../check/recommendations/loadRecommendationSnapshot');
 const { validateRecommendationSnapshot }     = require('../../check/recommendations/validateRecommendationSnapshot');
+const { resolvePreset, listPresets, validatePresetTargets } = require('../../init/presetRegistry');
 
 /**
  * init 명령 핸들러 — Phase 5-4: confirm-before-apply
@@ -31,6 +32,25 @@ async function initCommand(options) {
   const useRecommended = Boolean(options.recommended);
   const autoYes        = Boolean(options.yes);
   const fresh          = Boolean(options.fresh);
+  const usePreset      = options.preset || null;
+
+  // ── input mode 충돌 검사 ──────────────────────────────────
+  const hasExplicitTargets = Boolean(
+    (Array.isArray(options.target) && options.target.length > 0) || options.targets
+  );
+
+  if (usePreset && useRecommended) {
+    console.error('[bkit-doctor] error: --preset and --recommended are mutually exclusive');
+    console.error('  use --preset for a predefined structure, or --recommended for current-state analysis');
+    process.exitCode = 1;
+    return;
+  }
+  if (usePreset && hasExplicitTargets) {
+    console.error('[bkit-doctor] error: --preset cannot be combined with --target or --targets');
+    console.error('  use --preset alone, or specify targets directly without --preset');
+    process.exitCode = 1;
+    return;
+  }
 
   // ── target 수집 ──────────────────────────────────────────
   let rawTargets      = collectTargets(options);
@@ -93,8 +113,37 @@ async function initCommand(options) {
     }
   }
 
+  // ── preset 해석 ──────────────────────────────────────────
+  let fromPreset = false;
+  if (usePreset) {
+    console.log(`[bkit-doctor] init: ${projectRoot}`);
+
+    const preset = resolvePreset(usePreset);
+    if (!preset) {
+      console.error(`[bkit-doctor] unknown preset: "${usePreset}"`);
+      console.error('');
+      console.error('available presets:');
+      for (const p of listPresets())
+        console.error(`  ${p.name.padEnd(12)} ${p.description}`);
+      process.exitCode = 1;
+      return;
+    }
+
+    // preset target 유효성 검증 (preset 정의 오류 방어)
+    const { valid: ptValid, invalid: ptInvalid } = validatePresetTargets(preset.targets);
+    if (!ptValid) {
+      console.error(`[bkit-doctor] internal error: preset "${usePreset}" has invalid targets: ${ptInvalid.join(', ')}`);
+      process.exitCode = 1;
+      return;
+    }
+
+    console.log(`[preset] "${usePreset}": ${preset.description}`);
+    rawTargets = preset.targets;
+    fromPreset = true;
+  }
+
   // explicit target validation
-  if (rawTargets.length > 0 && !fromRecommended) {
+  if (rawTargets.length > 0 && !fromRecommended && !fromPreset) {
     const { valid, unknown } = validateTargets(rawTargets);
     if (unknown.length > 0) {
       console.error('[bkit-doctor] unknown targets:');
@@ -119,7 +168,7 @@ async function initCommand(options) {
   }
 
   // ── 헤더 출력 ────────────────────────────────────────────
-  if (!useRecommended) {
+  if (!useRecommended && !usePreset) {
     console.log(`[bkit-doctor] init: ${projectRoot}`);
     if (dryRun) console.log('[dry-run] no files will be changed');
     if (rawTargets.length > 0) console.log(`[targets] ${rawTargets.join(', ')}`);
@@ -142,12 +191,12 @@ async function initCommand(options) {
   const planSkip      = plan.filter(i => i.kind === 'file' && i.action === 'skip').length;
   const noOp          = planMkdir === 0 && planCreate === 0 && planOverwrite === 0;
 
-  const suffix = fromRecommended ? ' from recommendations' : '';
+  const suffix = fromRecommended ? ' from recommendations' : fromPreset ? ` from preset "${usePreset}"` : '';
 
   // ── 3. dry-run 종료 ──────────────────────────────────────
   if (dryRun) {
     console.log('');
-    printSummary(rawTargets, fromRecommended, planMkdir, planCreate, planOverwrite, planSkip, null);
+    printSummary(rawTargets, fromRecommended, planMkdir, planCreate, planOverwrite, planSkip, null, usePreset);
     console.log('');
     console.log(`init completed${suffix} (dry-run)`);
     console.log('no files changed');
@@ -168,7 +217,7 @@ async function initCommand(options) {
   if (!autoYes) {
     const confirmed = await confirmApply({
       targets: rawTargets,
-      fromRecommended,
+      fromRecommended: fromRecommended || fromPreset,
       mkdirCount:    planMkdir,
       createCount:   planCreate,
       overwriteCount: planOverwrite,
@@ -183,7 +232,7 @@ async function initCommand(options) {
 
   // ── 6. apply ─────────────────────────────────────────────
   const { applied, skipped, backupSession } =
-    applyInitPlan(projectRoot, plan, { backup, backupDir });
+    applyInitPlan(projectRoot, plan, { backup, backupDir, preset: usePreset || undefined });
 
   // ── 7. 요약 출력 ─────────────────────────────────────────
   const mkdirCount     = applied.filter(i => i.kind === 'dir').length;
@@ -192,7 +241,7 @@ async function initCommand(options) {
   const skipCount      = skipped.filter(i => i.kind === 'file').length;
 
   console.log('');
-  printSummary(rawTargets, fromRecommended, mkdirCount, createCount, overwriteCount, skipCount, backupSession);
+  printSummary(rawTargets, fromRecommended, mkdirCount, createCount, overwriteCount, skipCount, backupSession, usePreset);
 
   // ── 8. 최종 상태 ─────────────────────────────────────────
   console.log('');
@@ -206,10 +255,10 @@ async function initCommand(options) {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-function printSummary(targets, fromRecommended, mkdir, create, overwrite, skip, backupSession) {
+function printSummary(targets, fromRecommended, mkdir, create, overwrite, skip, backupSession, presetName) {
   console.log('요약');
   if (targets.length > 0) {
-    const label = fromRecommended ? 'recommended targets' : 'selected targets';
+    const label = fromRecommended ? 'recommended targets' : presetName ? `preset targets` : 'selected targets';
     console.log(`  ${label.padEnd(20)}: ${targets.join(', ')}`);
   }
   console.log(`  ${'directories created'.padEnd(20)}: ${mkdir}`);

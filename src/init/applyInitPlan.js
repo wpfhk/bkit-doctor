@@ -21,10 +21,12 @@ const FILE_MAP = Object.fromEntries(FILES.map(f => [f.path, f]));
  * @param {boolean}    opts.dryRun     true면 아무것도 쓰지 않음
  * @param {boolean}    opts.backup     true면 overwrite 전 백업 수행
  * @param {string}     [opts.backupDir]사용자 지정 백업 루트
+ * @param {string}     [opts.preset]   preset 이름 (파일 내용 결정에 사용)
  * @returns {{ applied: PlanItem[], skipped: PlanItem[], blocked: PlanItem[], backupSession: string|null }}
  */
 function applyInitPlan(projectRoot, plan, opts = {}) {
-  const { dryRun = false, backup = false, backupDir } = opts;
+  const { dryRun = false, backup = false, backupDir, preset } = opts;
+  const contentContext = preset ? { preset } : {};
 
   const applied  = [];
   const skipped  = [];
@@ -59,7 +61,7 @@ function applyInitPlan(projectRoot, plan, opts = {}) {
       case 'create': {
         if (!dryRun) {
           const fileEntry = FILE_MAP[item.path];
-          const content   = fileEntry ? getContent(fileEntry) : '';
+          const content   = fileEntry ? getContent(fileEntry, contentContext) : '';
           const full      = path.join(projectRoot, item.path);
           fs.mkdirSync(path.dirname(full), { recursive: true });
           fs.writeFileSync(full, content, 'utf8');
@@ -76,7 +78,7 @@ function applyInitPlan(projectRoot, plan, opts = {}) {
             backedUp.push(item.path);
           }
           const fileEntry = FILE_MAP[item.path];
-          const content   = fileEntry ? getContent(fileEntry) : '';
+          const content   = fileEntry ? getContent(fileEntry, contentContext) : '';
           const full      = path.join(projectRoot, item.path);
           fs.writeFileSync(full, content, 'utf8');
         }

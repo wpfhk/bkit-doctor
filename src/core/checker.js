@@ -43,10 +43,11 @@ class CheckerRunner {
       try {
         const raw = await check.run(context);
         const n   = normalizeResult(raw);
-        results.push({ id: check.id, category, title: check.title, ...n });
+        results.push({ id: check.id, category, title: check.title, severity: check.severity, ...n });
       } catch (err) {
         results.push({
           id: check.id, category, title: check.title,
+          severity: check.severity,
           ...normalizeResult({ status: 'fail', message: err.message }),
         });
       }

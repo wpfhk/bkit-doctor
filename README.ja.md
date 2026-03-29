@@ -1,394 +1,284 @@
 # bkit-doctor
 
-> ⚠️ **開発中** — このプロジェクトは現在活発に開発されています。
+> Claude Code プロジェクト構造の診断、スキャフォールド、メンテナンスをコマンドラインから実行できるツールです。
 
-> bkitスタイルのプロジェクト環境を診断・初期化・維持するCLIツール。
-
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-0.5.8-orange.svg)](CHANGELOG.md)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/wpfhak/bkit-doctor/pulls)
+![npm version](https://img.shields.io/npm/v/bkit-doctor)
+![license](https://img.shields.io/npm/l/bkit-doctor)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dotoricode/bkit-doctor/pulls)
 
 [English](README.md) | [한국어](README.ko.md) | **日本語** | [中文](README.zh.md) | [Español](README.es.md)
 
 ---
 
-## はじめに
+## bkit-doctorとは？
 
-**bkit-doctor** は、あらゆるプロジェクトで bkit スタイルのワークフロー環境を構築・維持するための CLI ツールです。現在のプロジェクト構造を診断し、不足しているものや誤設定を報告し、安全かつ非破壊的な方法で不足ファイルを自動生成できます。
+**bkit-doctor** は、Claude Code プロジェクトが正しい構造を持っているかを検証するツールです。`.claude/` ディレクトリ、hooks、settings、エージェント定義、スキルファイル、テンプレート、ポリシー、ドキュメントのスキャフォールドをチェックし、不足しているものを自動的に修正します。
 
-このプロジェクト自体が、bkit-doctor が推奨するフェーズベースのワークフローで構築されています。すべての機能は Plan → Design → Do → Check の手法で計画・設計・実装・検証されています。
+Claude Code プロジェクトレイアウトのための **ESLint** のようなものです。14項目の診断チェックを実行し、各項目について pass/warn/fail を報告し、不足しているものをすべて1つのコマンドでスキャフォールドできます。
 
----
-
-## なぜこのプロジェクトが必要か
-
-構造化された AI ネイティブ開発ワークフローを導入すると強力な生産性が得られますが、始めることが難しい場合があります。適切なディレクトリ構造、エージェント定義、スキルファイル、テンプレート、ポリシーファイルを手動で設定するのは手間がかかり、ミスが起きやすいです。
-
-**bkit-doctor** はその参入障壁を下げるために作られました:
-
-- **診断** — 何が存在し、何が不足していて、何が必要かを即座に確認
-- **推薦** — 診断後に実行すべき init ターゲットを自動提案
-- **初期化** — 既存ファイルを変更せずに必要な構造を数秒で生成
-- **ターゲット指定** — 必要なものだけを一つずつ選んで適用
-- **プレビュー** — 実際にファイルが書き込まれる前に何が変わるかを確認
-- **確認** — 適用前に計画をレビューして承認
-
-このツールはシンプルなアイデアから生まれました: *ワークフローは、使い始めることが簡単でなければならない。*
-
----
-
-## 機能
-
-| 機能 | 説明 |
-|------|------|
-| `check` | プロジェクト環境の診断 — 項目ごとに pass / warn / fail |
-| 推薦機能 | check 後に実行すべき `init` ターゲットを自動提案 |
-| ターゲットグループ化 | 関連ターゲットを自動統合（例: `docs-core`） |
-| スナップショットキャッシュ | `check` が推薦スナップショットを保存; `init --recommended` が再利用 |
-| `init` | 不足しているディレクトリとファイルを非破壊的に生成 |
-| `--recommended` | 現在のプロジェクト状態から init ターゲットを自動選択 |
-| `--dry-run` | ファイルシステムを変更せずに生成計画だけを出力 |
-| `--yes / -y` | 確認プロンプトをスキップして即座に適用 |
-| `--fresh` | 推薦を強制再計算、キャッシュを無視 |
-| `--target` | 特定のターゲットのみ選択適用（繰り返し使用可能） |
-| `--targets` | カンマ区切りで複数のターゲットを一度に適用 |
-| `--overwrite` | 必要に応じて既存ファイルを上書き |
-| `--backup` | 上書き前に既存ファイルをバックアップ |
-| 確認プロンプト | 適用計画を表示し `Continue? (y/N)` を待機 |
-| タイポ検出 | `did you mean: docs-report?` ヒントを提供 |
-| クロスプラットフォーム | macOS および Windows で動作 |
-
----
-
-## ワークフロー哲学
-
-bkit-doctor は **フェーズベースの開発モデル** を基盤としています:
-
-```
-PM → PLAN → DESIGN → DO → CHECK → REPORT
+```bash
+npx bkit-doctor check          # プロジェクトを診断
+npx bkit-doctor fix --yes      # すべてを自動修正
 ```
 
-各フェーズはドキュメントを生成します。各ドキュメントは予測可能な場所に保存されます。すべての作業は要件から実装、検証まで追跡可能です。
-
 ---
 
-## bkit との関係
+## 誰のためのツール？
 
-> **bkit-doctor は独立したプロジェクトです。bkit の公式プラグインではなく、bkit プロジェクトとの公式な提携関係もありません。**
-
-bkit-doctor は **bkit に触発されました** — 強力な AI ネイティブ開発ワークフロー ツールキットです。
-
-bkit-doctor:
-
-- bkit コードを **含みません**
-- bkit なしでも **動作します**
-- bkit チームに **保証・管理されていません**
-- bkit 自体を置き換えたり拡張したりするものではなく、bkit スタイルのワークフローと一緒に役立つように設計されています
+- **すべての Claude Code ユーザー** — プロジェクトが Claude Code の期待する構造（`.claude/`、`CLAUDE.md`、hooks、settings）を持っているか確認できます
+- **構造化されたAIワークフローを導入するチーム** — エージェント、スキル、テンプレート、ポリシー、PDCA ドキュメントを数秒でスキャフォールドできます
+- **CI パイプライン** — `bkit-doctor check` は重大な問題がある場合に exit code 1 で終了するため、デプロイメントのゲートとして利用できます
+- **bkit ユーザー** — [bkit](https://github.com/anthropics/bkit) の PDCA ワークフローに従っている場合、bkit-doctor が環境全体を検証・ブートストラップします
 
 ---
 
 ## インストール
 
-### 要件
-
-- Node.js >= 18.0.0
-- npm
-
-### グローバルインストール
-
 ```bash
+# インストールせずに実行（お試しにおすすめ）
+npx bkit-doctor check
+
+# グローバルインストール
 npm install -g bkit-doctor
+
+# またはプロジェクトの開発依存として追加
+npm install --save-dev bkit-doctor
 ```
 
-### ソースから実行
-
-```bash
-git clone https://github.com/wpfhak/bkit-doctor.git
-cd bkit-doctor
-npm install
-npm link
-```
+**Node.js >= 18** が必要です。
 
 ---
 
-## 使い方
+## クイックスタート
 
 ```bash
-bkit-doctor <command> [options]
-```
-
-### クイックスタート
-
-```bash
-# プロジェクトの bkit 環境を診断
+# 1. プロジェクトを診断
 bkit-doctor check
 
-# check 結果に基づく推薦ターゲットを適用（スナップショットがあれば再利用）
-bkit-doctor init --recommended
+# 2. 不足しているものをすべて自動修正
+bkit-doctor fix --yes
 
-# init --recommended のプレビュー
-bkit-doctor init --recommended --dry-run
-
-# 全構造を初期化（確認プロンプトあり）
-bkit-doctor init
-
-# 確認をスキップして即座に適用
-bkit-doctor init --yes
-
-# 特定のターゲットのみ初期化
-bkit-doctor init --target hooks-json --target skills-core
+# 3. 確認 — HEALTHY になっているはずです
+bkit-doctor check
 ```
 
 ---
 
 ## コマンド
 
-### `check`
+bkit-doctor には7つのコマンドがあります：
 
-現在のディレクトリ（または指定したディレクトリ）の bkit 環境を診断します。
-診断後、`check` は推薦スナップショットを保存するので、
-`init --recommended` が再度チェックを実行せずに結果を再利用できます。
+### `check` — プロジェクト構造の診断
 
-```
-bkit-doctor check [options]
+14項目の診断チェックを実行し、各項目について pass/warn/fail を報告します。後続の `init --recommended` や `fix` のために推奨スナップショットを保存します。
 
-Options:
-  -p, --path <dir>   対象ディレクトリ（デフォルト: カレントディレクトリ）
+```bash
+bkit-doctor check                    # カレントディレクトリをチェック
+bkit-doctor check --path ./other     # 別のディレクトリをチェック
 ```
 
-**出力例:**
+Exit code: いずれかのハードチェックが失敗した場合は **1**、それ以外は **0**。
 
+### `init` — 不足ファイルのスキャフォールド
+
+不足しているディレクトリやファイルを作成します。デフォルトでは非破壊的です。明示的に `--overwrite` を指定しない限り、既存のファイルは上書きされません。
+
+```bash
+bkit-doctor init --recommended --yes      # 前回チェックの推奨を適用
+bkit-doctor init --preset default --yes   # プリセットバンドルを適用
+bkit-doctor init --target hooks-json      # 単一ターゲットをスキャフォールド
+bkit-doctor init --targets agents-core,docs-core  # 複数ターゲット
+bkit-doctor init --recommended --dry-run  # 書き込みなしでプレビュー
+bkit-doctor init --overwrite --backup     # バックアップ付きで上書き
 ```
-[bkit-doctor] 診断対象: /path/to/project
 
-──── カテゴリ ──────────────────────────
-  ✗ structure   1 fail
-  ! config      2 warn
-  ! docs        4 warn
-  ...
+### `fix` — ワンコマンド自動修復
 
-──── 詳細 ──────────────────────────────
-[FAIL] structure.claude-root — .claude/ missing
-  → run: bkit-doctor init --target claude-root
-...
+`check` + `recommend` + `init` のショートカットです。診断を実行し、推奨を計算し、適用します。
 
-合計 14件 — PASS 0 / WARN 12 / FAIL 2   状態: FAILED
+```bash
+bkit-doctor fix --yes           # すべてを修正、プロンプトなし
+bkit-doctor fix --dry-run       # 修正内容をプレビュー
+bkit-doctor fix --fresh --yes   # スナップショットを無視して再計算
+```
 
-──── 推薦 ──────────────────────────────
-  8 個の推薦ターゲット（14 件の問題に基づく）
+### `preset` — 定義済みスキャフォールドバンドル
 
-  • claude-root — .claude/ ルートディレクトリを作成
-  • hooks-json  — デフォルトの hooks.json ファイルを作成
-  • docs-core   — すべての docs/ スキャフォールドを作成
-    (covers: docs-plan, docs-design, docs-task, docs-report, docs-changelog)
+プリセットは、スキャフォールドするターゲットを選択し、生成されるファイルの内容に影響を与えます。
 
-  推薦される次のステップ:
-  bkit-doctor init --targets claude-root,hooks-json,...,docs-core
+```bash
+bkit-doctor preset list              # 利用可能なプリセットを表示
+bkit-doctor preset show default      # プリセットの詳細を表示
+bkit-doctor preset recommend         # 現在のプロジェクトに適したプリセットを推薦
+```
 
-  先にプレビュー:
-  bkit-doctor init --targets claude-root,hooks-json,...,docs-core --dry-run
+利用可能なプリセット：
+
+| Preset | 説明 | Targets |
+|--------|------|---------|
+| `default` | フル構造（config + agents + skills + templates + policies + docs） | 8 targets |
+| `lean` | 最小構造（config + agents のみ） | 4 targets |
+| `workflow-core` | ワークフロー構造（agents + skills + templates + policies） | 5 targets |
+| `docs` | ドキュメントのみ（plan, design, task, report, changelog） | 1 target |
+
+プリセットによって生成される内容は異なります。`default` は詳細なエージェントロールとスキル説明を生成し、`lean` はコンパクトなプレースホルダーを生成します。
+
+### `save` / `load` — 設定の保存と共有
+
+デフォルトモード（recommended またはプリセット）をローカルまたはグローバルに保存し、後から再適用したり、プロジェクト間で共有できます。
+
+```bash
+bkit-doctor save --local --recommended    # 設定をローカルに保存
+bkit-doctor save --global --preset lean   # グローバルに保存（全プロジェクト共通）
+bkit-doctor save --both --preset default  # 両方に保存
+
+bkit-doctor load --local                  # 保存済みのローカル設定を再適用
+bkit-doctor load --global                 # グローバル設定を現在のプロジェクトに適用
+bkit-doctor load --file ./settings.json   # 指定ファイルから適用
+```
+
+### `version` — バージョン情報の表示
+
+```bash
+bkit-doctor version       # バージョン + プラットフォーム情報
+bkit-doctor --version     # バージョン番号のみ
 ```
 
 ---
 
-### `init`
+## 診断項目（14項目）
 
-不足しているファイルとディレクトリを生成します。デフォルトは非破壊的 — 明示的に要求しない限り既存ファイルを上書きしません。
+| カテゴリ | チェック内容 | 重要度 |
+|----------|-------------|--------|
+| structure | `.claude/` ディレクトリの存在 | **hard**（未検出時 exit 1） |
+| config | `CLAUDE.md` の存在 | **hard**（未検出時 exit 1） |
+| config | `.claude/hooks.json` の存在 | soft |
+| config | `.claude/settings.local.json` の存在 | soft |
+| docs | `docs/01-plan/` から `docs/04-report/`（4項目） | soft |
+| agents | 必須エージェント定義ファイル4件 | soft |
+| skills | 必須 SKILL.md ファイル7件 | soft |
+| policies | 必須ポリシーファイル4件 | soft |
+| templates | 必須テンプレートファイル4件 | soft |
+| context | `.claude/context/` ディレクトリ | soft |
+| changelog | `CHANGELOG.md`（候補パス3箇所） | soft |
 
-適用前に `init` は計画サマリーを表示し、`Continue? (y/N)` を待ちます。
-`--dry-run` で書き込みなしにプレビュー、`--yes` で確認をスキップできます。
+**ハードチェック** は `check` を exit code 1 で終了させます。**ソフトチェック** は警告を出力しますが exit code 0 で終了します。
 
+---
+
+## CI での使用
+
+`bkit-doctor check` は重要な構造が不足している場合に exit code 1 を返すため、CI ゲートとして利用できます：
+
+```bash
+# GitHub Actions の例
+- name: Check Claude Code project health
+  run: npx bkit-doctor check --path .
+
+# シェルスクリプト
+bkit-doctor check || { echo "Project health check failed"; exit 1; }
 ```
-bkit-doctor init [options]
 
-Options:
-  -p, --path <dir>       対象ディレクトリ（デフォルト: カレントディレクトリ）
-  --dry-run              何も書き込まずに計画だけ表示
-  --recommended          現在のプロジェクト状態からターゲットを自動選択
-  --fresh                推薦を強制再計算（スナップショットを無視）
-  -y, --yes              確認プロンプトをスキップして即座に適用
-  --target <name>        特定のターゲットのみ適用（繰り返し使用可能）
-  --targets <list>       カンマ区切りで複数ターゲットを適用
-  --overwrite            既存ファイルの上書きを許可
-  --backup               上書き前に既存ファイルをバックアップ
-  --backup-dir <dir>     カスタムバックアップディレクトリ
-```
+---
 
-#### 利用可能な init ターゲット
+## 利用可能な init ターゲット
 
-| ターゲット | 作成されるもの |
-|-----------|--------------|
+| Target | 作成されるもの |
+|--------|---------------|
 | `claude-root` | `.claude/` ルートディレクトリ |
 | `hooks-json` | `.claude/hooks.json` |
 | `settings-local` | `.claude/settings.local.json` |
-| `agents-core` | `.claude/agents/` 配下の4つのエージェント定義ファイル |
-| `skills-core` | `.claude/skills/` 配下の6つのスキル SKILL.md ファイル |
-| `templates-core` | `.claude/templates/` 配下の4つのドキュメントテンプレート |
-| `policies-core` | `.claude/policies/` 配下の4つのポリシーファイル |
-| `docs-plan` | `docs/plan.md` |
-| `docs-design` | `docs/design.md` |
-| `docs-task` | `docs/task.md` |
-| `docs-report` | `docs/report.md` |
-| `docs-changelog` | `docs/changelog.md` |
-| `docs-core` | すべての docs（全 `docs-*` ターゲットのエイリアス） |
+| `agents-core` | `.claude/agents/` 配下にエージェント定義ファイル4件 |
+| `skills-core` | `.claude/skills/` 配下にスキル SKILL.md ファイル7件 |
+| `templates-core` | `.claude/templates/` 配下にドキュメントテンプレート4件 |
+| `policies-core` | `.claude/policies/` 配下にポリシーファイル4件 |
+| `docs-plan` | `docs/01-plan/` ディレクトリ |
+| `docs-design` | `docs/02-design/` ディレクトリ |
+| `docs-task` | `docs/03-task/` ディレクトリ |
+| `docs-report` | `docs/04-report/` ディレクトリ |
+| `docs-changelog` | `CHANGELOG.md` |
+| `docs-core` | 全ドキュメント（すべての `docs-*` ターゲットのエイリアス） |
 
 ---
 
-### `version`
+## bkitとは？
 
-バージョンとプラットフォーム情報を表示します。
+[bkit](https://github.com/anthropics/bkit) は、Claude Code のための PDCA ベースの開発ワークフローフレームワークです。AI ネイティブ開発のための構造化されたフェーズ（Plan, Design, Do, Check, Report）、エージェントチーム、品質ゲートを提供します。
 
-```bash
-bkit-doctor version
-```
+**bkit-doctor は bkit の有無にかかわらず動作します：**
 
----
+| 機能 | bkit なし | bkit あり |
+|------|:---:|:---:|
+| `check` — プロジェクト構造の診断 | Yes | Yes |
+| `init` — 不足ファイルのスキャフォールド | Yes | Yes |
+| `fix` — 自動修復 | Yes | Yes |
+| `preset` — ワークフロー最適化バンドル | Partial | Full |
+| `save` / `load` — 設定の永続化 | Yes | Yes |
 
-## 使用例
-
-### check 後に推薦を適用
-
-```bash
-# 1. 診断 — 推薦スナップショットを保存
-bkit-doctor check
-
-# 2. キャッシュされたスナップショットを使って推薦ターゲットを適用
-bkit-doctor init --recommended
-
-# 先にプレビュー
-bkit-doctor init --recommended --dry-run
-
-# 強制再計算（キャッシュを無視）
-bkit-doctor init --recommended --fresh
-```
-
-### 初期化のプレビュー（何も書き込まれない）
-
-```bash
-bkit-doctor init --dry-run
-```
-
-### 適用前に確認
-
-```bash
-bkit-doctor init --targets hooks-json,docs-core
-
-# Apply?
-#   targets      : hooks-json, docs-core
-#   mkdir        : 1
-#   create       : 6
-#   skip         : 0
-#
-# Continue? (y/N) y
-```
-
-### 確認をスキップ（CI / 自動化）
-
-```bash
-bkit-doctor init --yes
-bkit-doctor init --recommended --yes
-```
-
-### 必要なものだけ初期化
-
-```bash
-bkit-doctor init --target docs-report
-bkit-doctor init --targets hooks-json,agents-core
-bkit-doctor init --target skills-core --dry-run
-```
-
-### バックアップ付き安全な上書き
-
-```bash
-bkit-doctor init --overwrite --backup
-# .bkit-doctor/backups/<timestamp>/ にバックアップ後
-# 新しいスキャフォールド内容で上書き
-```
-
-### タイポ検出
-
-```bash
-bkit-doctor init --target docs-reprot
-# [bkit-doctor] unknown targets:
-#   - docs-reprot  (did you mean: docs-report?)
-```
+コアコマンド（`check`、`init`、`fix`）はすべての Claude Code プロジェクトで利用できます。プリセットと高度なスキャフォールドターゲットは bkit の PDCA ワークフローに最適化されています。
 
 ---
 
-## アーキテクチャ概要
+## アーキテクチャ
 
 ```
 bkit-doctor/
 ├── src/
 │   ├── cli/
-│   │   ├── index.js                     # CLI エントリポイント (commander)
-│   │   └── commands/
-│   │       ├── check.js                 # check コマンド + スナップショット保存
-│   │       ├── init.js                  # init コマンド (confirm / recommended / snapshot)
-│   │       └── version.js
+│   │   ├── index.js              # CLI entry point (commander)
+│   │   └── commands/             # check, init, fix, preset, save, load, version
 │   ├── core/
-│   │   └── checker.js                   # CheckerRunner
-│   ├── checkers/                        # 診断モジュール (structure, config, agents...)
-│   │   └── shared/fileRules.js
+│   │   └── checker.js            # CheckerRunner — registers and runs diagnostics
+│   ├── checkers/                 # 14 diagnostic modules
+│   │   └── shared/fileRules.js   # findMissingFiles, hasAnyFile utilities
 │   ├── check/
-│   │   ├── resultModel.js               # CheckResult 型
-│   │   ├── formatters/
-│   │   │   └── defaultFormatter.js      # ターミナル出力 + グループ化推薦レンダリング
-│   │   └── recommendations/
-│   │       ├── recommendationModel.js   # Recommendation 型
-│   │       ├── buildRecommendations.js  # warn/fail → 重複排除 + 優先度ソート
-│   │       ├── groupingRegistry.js      # 親/子グループ化ポリシー
-│   │       ├── groupRecommendations.js  # 生 → グループ化推薦
-│   │       ├── buildSuggestedFlow.js    # Recommendation[] → SuggestedFlow
-│   │       ├── suggestedFlowModel.js    # SuggestedFlow 型
-│   │       ├── computeRecommendations.js# async: チェック実行 → グループ化推薦
-│   │       ├── recommendationSnapshotModel.js
-│   │       ├── buildRecommendationFingerprint.js
-│   │       ├── saveRecommendationSnapshot.js
-│   │       ├── loadRecommendationSnapshot.js
-│   │       └── validateRecommendationSnapshot.js
-│   ├── init/
-│   │   ├── scaffoldManifest.js          # 作成項目 (dirs + files + aliases)
-│   │   ├── fileTemplates.js             # 最小ファイル内容
-│   │   ├── targetRegistry.js            # ターゲット名 + バリデーション + タイポヒント
-│   │   ├── buildInitPlan.js             # 計画計算（読み取り専用 FS スキャン）
-│   │   ├── applyInitPlan.js             # 計画実行（書き込み / バックアップ / dry-run）
-│   │   └── confirmApply.js              # readline 確認プロンプト
-│   ├── backup/                          # バックアップセッション管理
+│   │   ├── resultModel.js        # CheckResult type
+│   │   ├── formatters/           # terminal output renderer
+│   │   └── recommendations/      # recommendation engine + snapshot cache
+│   ├── init/                     # scaffold manifest, plan builder, apply logic
+│   ├── fix/                      # resolveFixTargets — snapshot-aware remediation
+│   ├── preset/                   # preset scoring + recommendation
+│   ├── config/                   # save/load settings (local + global)
+│   ├── backup/                   # backup session management
 │   └── shared/
-│       └── remediationMap.js            # checker id → initTarget マッピング
-├── .bkit-doctor/
-│   └── cache/
-│       └── recommendation-snapshot.json # check 後に保存
-└── docs/
-    ├── 01-plan/
-    ├── 02-design/
-    ├── 03-task/
-    └── 04-report/
+│       └── remediationMap.js     # checker id → initTarget mapping
+├── tests/                        # 167 tests (node:test)
+├── scripts/
+│   └── verify-release.js         # 38-check release verification
+└── docs/                         # PDCA phase documents (plan, design, task, report)
 ```
+
+---
+
+## bkitとの関係
+
+> **bkit-doctor は独立したプロジェクトです。** bkit の公式プラグインではなく、bkit チームとの提携関係もありません。
+
+bkit-doctor は [bkit](https://github.com/anthropics/bkit) — PDCA ベースの AI ネイティブ開発ワークフロー — にインスピレーションを受けて開発されました。著者は bkit の資料を通じて構造化された AI コラボレーションを学び、その知見がこのツールの設計に反映されています。
+
+bkit-doctor は bkit のコードを **含まず**、動作に bkit を **必要とせず**、bkit チームによって **承認・メンテナンスされているものではありません**。
 
 ---
 
 ## コントリビューション
 
-コントリビューションを歓迎します。プルリクエストを送る前に、提案する変更についてイシューを開いて議論してください。
+コントリビューションを歓迎します。プルリクエストを提出する前に、まず Issue を作成して変更内容について議論してください。
 
 1. リポジトリをフォーク
 2. フィーチャーブランチを作成: `git checkout -b feat/your-feature`
-3. 可能であればフェーズベースのワークフローに従う: Plan → Design → Implement → Check
-4. 何が、なぜ変更されたかの明確な説明とともにプルリクエストを送信
+3. 可能であれば、フェーズベースのワークフローに従ってください: Plan → Design → Implement → Check
+4. 変更内容と理由を明確に記述したプルリクエストを提出
 
 ---
 
 ## ライセンス
 
-Apache License 2.0 — 完全な条件は [LICENSE](LICENSE) を参照してください。
+Apache License 2.0 — 全文は [LICENSE](LICENSE) をご覧ください。
 
 ---
 
 ## 謝辞
 
-- **[bkit](https://github.com/upstageai/bkit)** — このプロジェクトに影響を与えたワークフロー哲学
-- オープンソースコミュニティ — このプロジェクトが基盤とするツールとパターン
-- 構造的で意図的な開発がより良い結果をもたらすと信じるすべての人々
+- **[bkit](https://github.com/anthropics/bkit)** — このプロジェクトに影響を与えたワークフロー哲学に感謝します
+- オープンソースコミュニティ — このプロジェクトが活用しているツールやパターンに感謝します
