@@ -4,18 +4,26 @@
  * buildPdcaGuide.js
  * 입력값을 받아 PDCA guide markdown 문자열을 생성한다.
  * 파일 시스템 접근 금지 — pure function.
+ *
+ * 역할: template selection + value injection.
+ * type별 hints는 templates/ 디렉터리에서 관리.
  */
 
-const VALID_TYPES = ['guideline', 'feature', 'bugfix', 'refactor'];
-
-function normalizeType(type) {
-  return VALID_TYPES.includes(type) ? type : 'guideline';
-}
+const { VALID_TYPES, getTemplate } = require('./templates');
 
 function buildPdcaGuide({ topic, type = 'guideline', owner = 'TBD', priority = 'P1', createdAt }) {
-  const safeType = normalizeType(type);
+  const h = getTemplate(type);
+
+  const criteriaLines = h.criteria.map(c => `- [ ] ${c}`).join('\n');
+  const riskRows = h.risks.map(r => `| ${r.risk} | ${r.impact} | ${r.mitigation} |`).join('\n');
+  const followupLines = h.followup.map(f => `- [ ] ${f}`).join('\n');
+
+  // normalizeType: if type is not valid, getTemplate returns guideline
+  const safeType = VALID_TYPES.includes(type) ? type : 'guideline';
 
   return `# PDCA Guide — ${topic}
+
+> ${h.subtitle}
 
 ## Meta
 
@@ -32,15 +40,15 @@ function buildPdcaGuide({ topic, type = 'guideline', owner = 'TBD', priority = '
 
 ### Background
 
-- Describe why this work is needed and what situation triggered it in 1–2 sentences.
+- ${h.background}
 
 ### Problem Statement
 
-- State the specific problem to solve. Be concrete — avoid vague descriptions.
+- ${h.problem}
 
 ### Goal
 
-- Define what success looks like when this work is complete.
+- ${h.goal}
 
 ### Scope
 
@@ -50,15 +58,13 @@ function buildPdcaGuide({ topic, type = 'guideline', owner = 'TBD', priority = '
 
 ### Success Criteria
 
-- [ ] Criterion that can be objectively verified
-- [ ] Criterion that can be objectively verified
-- [ ] Criterion that can be objectively verified
+${criteriaLines}
 
 ### Risks / Assumptions
 
 | Risk / Assumption | Impact | Mitigation |
 |-------------------|--------|------------|
-| Describe a risk or assumption that could affect the outcome | High / Medium / Low | Action to reduce the risk |
+${riskRows}
 
 ---
 
@@ -66,7 +72,7 @@ function buildPdcaGuide({ topic, type = 'guideline', owner = 'TBD', priority = '
 
 ### Execution Strategy
 
-- Describe the overall approach: what method, tools, or sequence will be used.
+- ${h.strategy}
 
 ### Work Breakdown
 
@@ -94,7 +100,7 @@ function buildPdcaGuide({ topic, type = 'guideline', owner = 'TBD', priority = '
 
 | Criterion | Method | Result | Pass/Fail |
 |-----------|--------|--------|-----------|
-| What to verify | How to verify it | (fill after check) | (fill after check) |
+| ${h.check} | (how to verify) | (fill after check) | (fill after check) |
 
 ### Review Questions
 
@@ -112,12 +118,11 @@ function buildPdcaGuide({ topic, type = 'guideline', owner = 'TBD', priority = '
 
 ### Improvement Actions
 
-- Describe what to change or improve based on Check results.
+- ${h.act}
 
 ### Follow-up
 
-- [ ] Action item that must happen after this cycle
-- [ ] Action item that must happen after this cycle
+${followupLines}
 
 ### Next Revision Trigger
 

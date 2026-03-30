@@ -84,7 +84,7 @@ function computePresetScores(finalTargets) {
   let workflowScore = 10;
   workflowScore += workflow * 20;
   if (workflow > 0 && workflow >= config && workflow >= docs) workflowScore += 20;
-  if (docs > 0) workflowScore -= 15;
+  if (docs > 0 && docs > workflow) workflowScore -= 15;
 
   // docs
   let docsScore = 10;

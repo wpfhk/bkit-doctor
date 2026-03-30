@@ -14,6 +14,8 @@
  * @property {string}   [initTarget] - init 생성 대상 키
  */
 
+const VALID_STATUSES = new Set(['pass', 'warn', 'fail']);
+
 /**
  * checker raw result → 정규화된 구조
  * @param {Object} raw
@@ -21,7 +23,7 @@
  */
 function normalizeResult(raw) {
   return {
-    status:   raw.status,
+    status:   VALID_STATUSES.has(raw.status) ? raw.status : 'fail',
     message:  raw.message,
     missing:  Array.isArray(raw.missing)  ? raw.missing  : [],
     found:    Array.isArray(raw.found)    ? raw.found    : [],

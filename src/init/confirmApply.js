@@ -52,10 +52,11 @@ async function confirmApply(summary) {
       resolve(a === 'y' || a === 'yes');
     });
 
-    // Ctrl+C 처리
+    // Ctrl+C 처리 — SIGINT 관례에 따라 exitCode 130 설정
     rl.on('SIGINT', () => {
       rl.close();
       console.log('');
+      process.exitCode = 130;
       resolve(false);
     });
   });

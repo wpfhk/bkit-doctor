@@ -10,6 +10,8 @@ const { presetListCommand, presetShowCommand, presetRecommendCommand } = require
 const { saveCommand }    = require('./commands/save');
 const { loadCommand }    = require('./commands/load');
 const { pdcaCommand }    = require('./commands/pdca');
+const { pdcaStageCommandFactory } = require('./commands/pdcaStage');
+const { pdcaListCommand }  = require('./commands/pdcaList');
 const pkg = require('../../package.json');
 
 const program = new Command();
@@ -100,18 +102,59 @@ program
   .option('--file <path>',     '지정 파일에서 로드하여 현재 프로젝트에 적용')
   .action(loadCommand);
 
-program
+// ── pdca command group ────────────────────────────────────────────────────────
+// backward compat: `pdca <topic>` → full guide (same as `pdca create <topic>`)
+// new: `pdca plan|do|check|report <topic>` → stage-specific documents
+
+const PDCA_OPTIONS = [
+  ['-p, --path <dir>',      'project root', process.cwd()],
+  ['-o, --output <file>',   'output file path'],
+  ['--stdout',              'print markdown content to terminal'],
+  ['--dry-run',             'show generation plan, path, conflict, and preview'],
+  ['--overwrite',           'overwrite existing file'],
+  ['--type <kind>',         'guideline | feature | bugfix | refactor', 'guideline'],
+  ['--owner <name>',        'owner name', 'TBD'],
+  ['--priority <level>',    'priority level', 'P1'],
+];
+
+function addPdcaOptions(cmd) {
+  for (const opt of PDCA_OPTIONS) cmd.option(...opt);
+  return cmd;
+}
+
+// backward compat: `pdca <topic>` generates full guide
+addPdcaOptions(program
   .command('pdca <topic>')
-  .description('Generate PDCA guide document')
-  .option('-p, --path <dir>',      'project root', process.cwd())
-  .option('-o, --output <file>',   'output file path')
-  .option('--stdout',              'print output')
-  .option('--overwrite',           'overwrite existing file')
-  .option('--type <kind>',         'guideline | feature | bugfix | refactor', 'guideline')
-  .option('--owner <name>',        'owner name', 'TBD')
-  .option('--priority <level>',    'priority level', 'P1')
+  .description('Generate full PDCA guide document'))
   .action(pdcaCommand);
 
+// stage subcommands: pdca-plan, pdca-do, pdca-check, pdca-report
+const stageDescs = {
+  plan:   'Generate PDCA Plan document (background, scope, criteria)',
+  do:     'Generate PDCA Do document (execution, tasks, checklist)',
+  check:  'Generate PDCA Check document (validation, gaps, sign-off)',
+  report: 'Generate PDCA Report document (summary, lessons, follow-up)',
+};
+for (const stage of ['plan', 'do', 'check', 'report']) {
+  addPdcaOptions(program
+    .command(`pdca-${stage} <topic>`)
+    .description(stageDescs[stage]))
+    .action(pdcaStageCommandFactory(stage));
+}
+
+// pdca-list: list generated PDCA documents
+program
+  .command('pdca-list')
+  .description('List generated PDCA guide documents')
+  .option('-p, --path <dir>', 'project root', process.cwd())
+  .action(pdcaListCommand);
+
 function collect(val, prev) { return prev.concat([val]); }
+
+process.on('unhandledRejection', (reason) => {
+  const msg = reason instanceof Error ? reason.message : String(reason);
+  console.error(`[bkit-doctor] unhandled error: ${msg}`);
+  process.exitCode = 1;
+});
 
 program.parse(process.argv);

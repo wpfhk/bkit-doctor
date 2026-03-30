@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const { formatLabel }                = require('../formatLabel');
 const { buildInitPlan }              = require('../../init/buildInitPlan');
 const { applyInitPlan }              = require('../../init/applyInitPlan');
 const { validateTargets, suggestTarget, TARGETS } = require('../../init/targetRegistry');
@@ -279,17 +280,6 @@ function collectTargets(options) {
   if (options.targets)
     result.push(...options.targets.split(',').map(t => t.trim()).filter(Boolean));
   return result;
-}
-
-function formatLabel(item) {
-  switch (item.action) {
-    case 'mkdir':     return '[MKDIR]   ';
-    case 'mkdir-skip':return '[DIR-OK]  ';
-    case 'create':    return '[CREATE]  ';
-    case 'skip':      return '[SKIP]    ';
-    case 'overwrite': return '[OVERWRITE]';
-    default:          return '[?]       ';
-  }
 }
 
 module.exports = { initCommand };

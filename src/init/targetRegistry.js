@@ -21,7 +21,7 @@ const TARGETS = {
   'agents-core':     '.claude/agents/ 필수 에이전트 4종',
 
   // 스킬
-  'skills-core':     '.claude/skills/ 필수 스킬 SKILL.md 6종',
+  'skills-core':     '.claude/skills/ 필수 스킬 SKILL.md 7종',
 
   // 템플릿
   'templates-core':  '.claude/templates/ 템플릿 4종',
@@ -30,6 +30,7 @@ const TARGETS = {
   'policies-core':   '.claude/policies/ 정책 파일 4종',
 
   // 문서 (개별)
+  'docs-pdca':       'output/pdca/ 디렉터리',
   'docs-plan':       'docs/01-plan/ 디렉터리',
   'docs-design':     'docs/02-design/ 디렉터리',
   'docs-task':       'docs/03-task/ 디렉터리',
@@ -37,7 +38,7 @@ const TARGETS = {
   'docs-changelog':  'CHANGELOG.md (프로젝트 루트)',
 
   // 문서 묶음
-  'docs-core':       'docs/ 전체 (01-plan, 02-design, 03-task, 04-report, changelog)',
+  'docs-core':       'docs/ 전체 (01-plan, 02-design, 03-task, 04-report, changelog) + output/pdca/',
 };
 
 const VALID_TARGETS = new Set(Object.keys(TARGETS));

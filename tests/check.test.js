@@ -96,8 +96,8 @@ test('CheckerRunner: exception in checker produces fail result', async () => {
 
 const { DEFAULT_CHECKERS } = require('../src/checkers/index');
 
-test('DEFAULT_CHECKERS: has 14 checkers', () => {
-  assert.strictEqual(DEFAULT_CHECKERS.length, 14);
+test('DEFAULT_CHECKERS: has 16 checkers', () => {
+  assert.strictEqual(DEFAULT_CHECKERS.length, 16);
 });
 
 test('DEFAULT_CHECKERS: each checker has id, title, severity, run', () => {
@@ -128,9 +128,9 @@ test('check: healthy project → output contains HEALTHY', () => {
   assert.ok(r.stdout.includes('HEALTHY'), r.stdout);
 });
 
-test('check: healthy project → 14 PASS', () => {
+test('check: healthy project → 16 PASS', () => {
   const r = runCheck(['--path', '.']);
-  assert.ok(r.stdout.includes('PASS 14'), r.stdout);
+  assert.ok(r.stdout.includes('PASS 16'), r.stdout);
 });
 
 // ── CLI 통합: 빈 디렉터리 (hard fail) ───────────────────────────────────────

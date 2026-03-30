@@ -3,10 +3,7 @@
 const { GROUPS }             = require('./groupingRegistry');
 const { VALID_TARGETS }      = require('../../init/targetRegistry');
 const { makeRecommendation } = require('./recommendationModel');
-const { TARGET_PRIORITY }    = require('./buildRecommendations');
-
-const PRIORITY_MAP = Object.fromEntries(TARGET_PRIORITY.map((t, i) => [t, i]));
-function getPriority(t) { return PRIORITY_MAP[t] !== undefined ? PRIORITY_MAP[t] : 999; }
+const { getPriority } = require('./buildRecommendations');
 
 /**
  * groupRecommendations.js

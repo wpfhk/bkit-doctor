@@ -39,7 +39,7 @@ function groupByCategory(results) {
   for (const r of results) {
     const cat = r.category || r.id.split('.')[0];
     if (!groups[cat]) groups[cat] = { pass: 0, warn: 0, fail: 0 };
-    groups[cat][r.status]++;
+    if (r.status in groups[cat]) groups[cat][r.status]++;
   }
   return groups;
 }

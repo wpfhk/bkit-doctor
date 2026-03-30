@@ -2,7 +2,7 @@
 
 const fs   = require('fs');
 const path = require('path');
-const { findMissingFiles, hasAnyFile } = require('./shared/fileRules');
+const { findMissingFiles } = require('./shared/fileRules');
 
 const REQUIRED_TEMPLATES = [
   path.join('.claude', 'templates', 'plan-template.md'),

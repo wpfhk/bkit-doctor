@@ -12,7 +12,7 @@
 const GROUPS = [
   {
     parent:      'docs-core',
-    children:    ['docs-plan', 'docs-design', 'docs-task', 'docs-report', 'docs-changelog'],
+    children:    ['docs-pdca', 'docs-plan', 'docs-design', 'docs-task', 'docs-report', 'docs-changelog'],
     minChildren: 2,
     label:       'all docs',
     description: 'create all docs/ scaffolds (plan, design, task, report, changelog)',

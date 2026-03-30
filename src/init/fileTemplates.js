@@ -44,6 +44,7 @@ const SKILL_DETAILS = {
   'phase-do':        'Execute implementation by dispatching the implementer agent within approved Design.',
   'phase-check':     'Verify implementation results against Plan/Design completion criteria (pass/warn/fail).',
   'phase-report':    'Write a phase completion report, update changelog, and link to the next phase.',
+  'work-summary':    'Output a 4-line fixed-format work status snapshot at any time during a session.',
 };
 
 // ── 생성 함수 ───────────────────────────────────────────────────────────────
@@ -63,7 +64,7 @@ function getContent(file, context = {}) {
       return JSON.stringify({ hooks: [] }, null, 2) + '\n';
 
     case 'json-settings':
-      return JSON.stringify({ env: {}, permissions: [] }, null, 2) + '\n';
+      return JSON.stringify({ env: {}, permissions: { allow: [], deny: [] } }, null, 2) + '\n';
 
     case 'agent': {
       const detail = !isLean && AGENT_DETAILS[file.name];
@@ -175,6 +176,30 @@ function getContent(file, context = {}) {
         '',
         '## Summary',
         '<!-- Brief summary -->',
+      ].join('\n') + '\n';
+
+    case 'pdca-readme':
+      return [
+        '# PDCA Guides',
+        '',
+        'This directory contains PDCA (Plan-Do-Check-Act) guide documents.',
+        '',
+        '## Usage',
+        '',
+        '```bash',
+        'bkit-doctor pdca "topic name"              # generate a new guide',
+        'bkit-doctor pdca "topic name" --stdout      # preview without file',
+        'bkit-doctor pdca "topic name" --type bugfix # specify type',
+        '```',
+        '',
+        '## Types',
+        '',
+        '| Type | Purpose |',
+        '|------|---------|',
+        '| `guideline` | Policy / operational standard |',
+        '| `feature` | New feature development |',
+        '| `bugfix` | Bug fix / incident response |',
+        '| `refactor` | Code / architecture improvement |',
       ].join('\n') + '\n';
 
     case 'changelog':

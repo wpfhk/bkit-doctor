@@ -18,6 +18,7 @@ const TARGET_PRIORITY = [
   'skills-core',
   'templates-core',
   'docs-core',
+  'docs-pdca',
   'docs-plan',
   'docs-design',
   'docs-task',
@@ -88,4 +89,4 @@ function buildRecommendations(results) {
   return { recommendations, unmappedCount, invalidCount };
 }
 
-module.exports = { buildRecommendations, TARGET_PRIORITY };
+module.exports = { buildRecommendations, TARGET_PRIORITY, getPriority };

@@ -28,7 +28,7 @@ const CATEGORY_WORKFLOW = new Set([
 
 /** docs 계열 target */
 const CATEGORY_DOCS = new Set([
-  'docs-core', 'docs-plan', 'docs-design', 'docs-task', 'docs-report', 'docs-changelog',
+  'docs-core', 'docs-pdca', 'docs-plan', 'docs-design', 'docs-task', 'docs-report', 'docs-changelog',
 ]);
 
 /**
@@ -91,7 +91,7 @@ function recommendPresets(finalTargets) {
       preset,
       score,
       label:  getMatchLabel(score),
-      reason: reasons[preset],
+      reason: reasons[preset] ?? `${preset} preset matches your project structure`,
     }))
     .sort((a, b) => b.score - a.score);
 

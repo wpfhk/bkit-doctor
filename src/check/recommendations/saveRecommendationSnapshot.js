@@ -45,8 +45,11 @@ function saveRecommendationSnapshot(projectRoot, results) {
     const snapshotPath = path.join(projectRoot, SNAPSHOT_REL_PATH);
     fs.mkdirSync(path.dirname(snapshotPath), { recursive: true });
     fs.writeFileSync(snapshotPath, JSON.stringify(snapshot, null, 2), 'utf8');
-  } catch {
+  } catch (err) {
     // silent — snapshot 저장 실패는 check 흐름에 영향 없음
+    if (process.env.DEBUG) {
+      console.warn(`[bkit-doctor] warn: snapshot save failed: ${err.message}`);
+    }
   }
 }
 

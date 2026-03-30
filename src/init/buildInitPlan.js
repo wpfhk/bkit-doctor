@@ -31,7 +31,7 @@ function buildInitPlan(projectRoot, opts = {}) {
 
   // 선택된 파일에 필요한 디렉터리 계산
   const neededDirPaths = filterByTarget
-    ? computeNeededDirs(filteredFiles, projectRoot)
+    ? computeNeededDirs(filteredFiles)
     : null;
 
   // 디렉터리 계획
@@ -87,7 +87,7 @@ function expandAliases(targets) {
 /**
  * 선택된 파일 목록에서 필요한 디렉터리 경로 집합을 계산한다.
  */
-function computeNeededDirs(filteredFiles, projectRoot) {
+function computeNeededDirs(filteredFiles) {
   const needed = new Set();
   for (const file of filteredFiles) {
     // 파일의 상위 디렉터리를 재귀적으로 추가

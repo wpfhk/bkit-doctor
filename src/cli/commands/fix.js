@@ -5,6 +5,7 @@ const { resolveFixTargets } = require('../../fix/resolveFixTargets');
 const { buildInitPlan }     = require('../../init/buildInitPlan');
 const { applyInitPlan }     = require('../../init/applyInitPlan');
 const { confirmApply }      = require('../../init/confirmApply');
+const { formatLabel }       = require('../formatLabel');
 
 /**
  * fix 명령 핸들러
@@ -136,20 +137,23 @@ async function fixCommand(options) {
     console.log('fix completed with skipped files');
   else
     console.log('fix completed');
+
+  // pdca hint: if docs-pdca was scaffolded but no guide exists yet
+  if (targets.includes('docs-pdca') || targets.includes('docs-core')) {
+    const pdcaDir = path.join(projectRoot, 'output', 'pdca');
+    const fs = require('fs');
+    if (fs.existsSync(pdcaDir)) {
+      const guides = fs.readdirSync(pdcaDir).filter(f => f.endsWith('.md') && f !== 'README.md');
+      if (guides.length === 0) {
+        console.log('');
+        console.log('[hint] output/pdca/ scaffolded but no PDCA guide yet.');
+        console.log('  → Run: bkit-doctor pdca "<topic>" to generate your first guide.');
+      }
+    }
+  }
 }
 
 // ── helpers ────────────────────────────────────────────────────────────────
-
-function formatLabel(item) {
-  switch (item.action) {
-    case 'mkdir':     return '[MKDIR]   ';
-    case 'mkdir-skip':return '[DIR-OK]  ';
-    case 'create':    return '[CREATE]  ';
-    case 'skip':      return '[SKIP]    ';
-    case 'overwrite': return '[OVERWRITE]';
-    default:          return '[?]       ';
-  }
-}
 
 function printSummary(targets, mkdir, create, overwrite, skip, backupSession) {
   console.log('요약');

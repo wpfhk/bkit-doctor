@@ -23,7 +23,10 @@ function validateRecommendationSnapshot(snapshot, projectRoot, currentFingerprin
   if (norm(snapshot.projectRoot) !== norm(projectRoot))
     return { valid: false, reason: 'projectRoot mismatch' };
 
-  if (!Array.isArray(snapshot.finalTargets) || snapshot.finalTargets.length === 0) {
+  if (!Array.isArray(snapshot.finalTargets))
+    return { valid: false, reason: 'invalid snapshot structure' };
+
+  if (snapshot.finalTargets.length === 0) {
     // 빈 targets snapshot은 healthy 상태 — 재사용하되 targets는 빈 배열로 처리
     if (snapshot.fingerprint !== currentFingerprint)
       return { valid: false, reason: 'fingerprint mismatch' };

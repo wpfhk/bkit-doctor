@@ -20,10 +20,13 @@ const DIRECTORIES = [
   { path: '.claude/skills/phase-do',        targets: ['skills-core'] },
   { path: '.claude/skills/phase-check',     targets: ['skills-core'] },
   { path: '.claude/skills/phase-report',    targets: ['skills-core'] },
+  { path: '.claude/skills/work-summary',    targets: ['skills-core'] },
   { path: '.claude/templates',              targets: ['templates-core'] },
   { path: '.claude/context',                targets: ['claude-root'] },
   { path: '.claude/policies',               targets: ['policies-core'] },
   { path: 'docs',           targets: ['docs-core', 'docs-plan', 'docs-design', 'docs-task', 'docs-report', 'docs-changelog'] },
+  { path: 'output',         targets: ['docs-pdca'] },
+  { path: 'output/pdca',    targets: ['docs-pdca'] },
   { path: 'docs/01-plan',   targets: ['docs-plan'] },
   { path: 'docs/02-design', targets: ['docs-design'] },
   { path: 'docs/03-task',   targets: ['docs-task'] },
@@ -48,6 +51,7 @@ const FILES = [
   { path: '.claude/skills/phase-do/SKILL.md',        initTarget: 'skills-core', type: 'skill', name: 'phase-do' },
   { path: '.claude/skills/phase-check/SKILL.md',     initTarget: 'skills-core', type: 'skill', name: 'phase-check' },
   { path: '.claude/skills/phase-report/SKILL.md',    initTarget: 'skills-core', type: 'skill', name: 'phase-report' },
+  { path: '.claude/skills/work-summary/SKILL.md',    initTarget: 'skills-core', type: 'skill', name: 'work-summary' },
 
   // templates
   { path: '.claude/templates/plan-template.md',   initTarget: 'templates-core', type: 'template', name: 'plan' },
@@ -61,6 +65,9 @@ const FILES = [
   { path: '.claude/policies/security-policy.md',      initTarget: 'policies-core', type: 'policy', name: 'security' },
   { path: '.claude/policies/documentation-policy.md', initTarget: 'policies-core', type: 'policy', name: 'documentation' },
 
+  // pdca
+  { path: 'output/pdca/README.md', initTarget: 'docs-pdca', type: 'pdca-readme' },
+
   // docs-changelog: 루트 CHANGELOG.md (changelog.exists checker의 최우선 후보)
   { path: 'CHANGELOG.md', initTarget: 'docs-changelog', type: 'changelog' },
 ];
@@ -70,7 +77,7 @@ const FILES = [
  * buildInitPlan에서 docs-core를 확장한다.
  */
 const TARGET_ALIASES = {
-  'docs-core': ['docs-plan', 'docs-design', 'docs-task', 'docs-report', 'docs-changelog'],
+  'docs-core': ['docs-pdca', 'docs-plan', 'docs-design', 'docs-task', 'docs-report', 'docs-changelog'],
 };
 
 module.exports = { DIRECTORIES, FILES, TARGET_ALIASES };

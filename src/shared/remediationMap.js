@@ -33,6 +33,12 @@ const REMEDIATION_MAP = {
     label:       'local settings',
     description: 'create the default settings.local.json file',
   },
+  'context.required': {
+    initTarget:  'claude-root',
+    fixHint:     '.claude/context/ 디렉터리 생성 필요',
+    label:       'context directory',
+    description: 'create the .claude/context/ directory for project context files',
+  },
   'agents.required': {
     initTarget:  'agents-core',
     fixHint:     'agent 파일 스캐폴드 생성 필요',
@@ -56,6 +62,18 @@ const REMEDIATION_MAP = {
     fixHint:     'policy 파일 생성 필요',
     label:       'core policies',
     description: 'generate global, output, security, and documentation policy files',
+  },
+  'docs.pdca': {
+    initTarget:  'docs-pdca',
+    fixHint:     'output/pdca/ 디렉터리 생성 필요',
+    label:       'pdca docs directory',
+    description: 'create the output/pdca/ directory for PDCA guide documents',
+  },
+  'docs.pdca-content': {
+    initTarget:  'docs-pdca',
+    fixHint:     'PDCA guide 파일 생성 필요 — bkit-doctor pdca <topic>',
+    label:       'pdca guide content',
+    description: 'generate at least one PDCA guide using bkit-doctor pdca command',
   },
   'docs.plan': {
     initTarget:  'docs-plan',
