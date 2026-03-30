@@ -2,7 +2,7 @@
 
 > AI コーディングツールで作ったプロジェクトの構造を診断し、自動的に修正する CLI ツール。
 
-[![npm version](https://img.shields.io/badge/npm-v1.1.0-blue)](https://www.npmjs.com/package/bkit-doctor)
+[![npm version](https://img.shields.io/badge/npm-v1.1.1-blue)](https://www.npmjs.com/package/bkit-doctor)
 [![license](https://img.shields.io/npm/l/bkit-doctor)](https://github.com/dotoricode/bkit-doctor/blob/main/LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dotoricode/bkit-doctor/pulls)

@@ -11,7 +11,7 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
-## [1.1.0] — skill & setup commands — 2026-03-30
+## [1.1.1] — skill & setup commands — 2026-03-30
 
 ### Added
 
