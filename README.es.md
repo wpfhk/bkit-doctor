@@ -1,508 +1,298 @@
-# bkit-doctor
+<div align="center">
 
-> Herramienta CLI que diagnostica la estructura de proyectos creados con herramientas de IA y la corrige automáticamente.
+# 🩺 bkit-doctor
+
+**El CLI de flujo de trabajo AI para Claude Code.**
+Configura tu proyecto una vez. Deja que Claude Code se encargue del resto — automáticamente, de forma consistente, cada vez.
 
 [![npm version](https://img.shields.io/badge/npm-v1.1.1-blue)](https://www.npmjs.com/package/bkit-doctor)
-[![license](https://img.shields.io/npm/l/bkit-doctor)](https://github.com/dotoricode/bkit-doctor/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/bkit-doctor)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dotoricode/bkit-doctor/pulls)
 
-[English](./README.md) | [한국어](./README.ko.md) | [日本語](./README.ja.md) | [中文](./README.zh.md) | **Español**
+[English](README.md) · [한국어](README.ko.md) · [日本語](README.ja.md) · [中文](README.zh.md) · **Español**
+
+</div>
 
 ---
 
-## ¿Qué es bkit-doctor?
+## ¿Por qué bkit-doctor?
 
-Cuando construyes proyectos con herramientas de IA como Claude Code o Cursor, la estructura tiende a desorganizarse. Faltan archivos de contexto, los directorios de documentación no existen o los archivos de configuración están ausentes. Con el tiempo, la IA pierde el contexto estructurado que necesita para ser efectiva.
+Cuando construyes proyectos con Claude Code, dos problemas aparecen en pocos días:
 
-**bkit-doctor** diagnostica estos problemas con un solo comando y los corrige automáticamente. Verifica que tu proyecto tenga la estructura necesaria — directorio `.claude/`, hooks, settings, definiciones de agentes, archivos de skills, plantillas, políticas y documentación — y crea automáticamente lo que falta.
+1. **Deriva estructural** — Los directorios `.claude/` desaparecen, las reglas de `CLAUDE.md` se dessincronizan, los hooks se pierden.
+2. **Amnesia de flujo de trabajo** — Claude Code olvida documentar lo que construyó. Sin plan, sin rastro, sin auditoría.
 
-Piensa en él como **ESLint para la estructura de tu proyecto**: 14 diagnósticos, pass/warn/fail por elemento, corrección automática con un solo comando.
+**bkit-doctor resuelve ambos.** Impone la estructura del proyecto *y* conecta Claude Code para que siga un flujo de trabajo PDCA (Plan-Do-Check-Act) automáticamente — sin que tengas que pedirlo cada vez.
 
-```bash
-npx bkit-doctor check          # diagnosticar proyecto
-npx bkit-doctor fix --yes      # corregir todo automáticamente
 ```
-
-bkit-doctor está construido sobre la metodología de flujo de trabajo PDCA de [bkit](https://github.com/popup-studio-ai/bkit-claude-code), pero funciona de forma independiente — no requiere instalar bkit.
+Claude Code genera la lógica.
+bkit-doctor garantiza que la estructura y el estado del flujo de trabajo se rastreen permanentemente.
+```
 
 ---
 
-## Inicio rápido: Configurar un nuevo proyecto con bkit
+## 🚀 Inicio rápido
 
-> bkit-doctor por sí solo es útil, pero combinarlo con [bkit](https://github.com/popup-studio-ai/bkit-claude-code) desbloquea el flujo de trabajo PDCA completo, 31 agentes y 36 skills en Claude Code.
-
-### Step 1 — Generar la estructura del proyecto con bkit-doctor
-
-Ejecuta los siguientes comandos dentro del directorio de tu nuevo proyecto.
+La forma más rápida de configurar un proyecto nuevo o existente:
 
 ```bash
-# 1. Diagnosticar el proyecto (en proyectos nuevos muchos items darán warn/fail — es normal)
-npx bkit-doctor check
-
-# 2. Generar automáticamente toda la estructura faltante
-npx bkit-doctor init --preset default --yes
-
-# 3. Volver a diagnosticar y confirmar estado HEALTHY
-npx bkit-doctor check
+npx bkit-doctor setup
 ```
 
-Después de este paso, tu proyecto tendrá el siguiente **esqueleto de directorios y archivos**:
+Este único comando ejecuta un asistente interactivo:
+
+```
+bkit-doctor setup
+
+  [1/4] Diagnosticando estructura del proyecto...
+        ✔ Directorio .claude/ encontrado
+        ✔ CLAUDE.md encontrado
+        ⚠ hooks.json no encontrado → se corregirá
+
+  [2/4] Corrigiendo automáticamente 3 problemas...
+        ✔ hooks.json creado
+        ✔ settings.local.json creado
+        ✔ docs/ scaffoldeado
+
+  [3/4] Generando CLAUDE.md...
+        ✔ CLAUDE.md escrito (copia de seguridad: CLAUDE_20260330_backup.md)
+
+  [4/4] Generando SKILL.md + scripts npm...
+        ✔ SKILL.md creado
+        ✔ Añadido a package.json: bkit:check, bkit:fix, bkit:setup
+
+  Configuración completa. Claude Code seguirá flujos de trabajo PDCA automáticamente.
+```
+
+Después de la configuración, usa los atajos npm en lugar de `npx bkit-doctor ...`:
+
+```bash
+npm run bkit:check   # → bkit-doctor check
+npm run bkit:fix     # → bkit-doctor fix --yes
+npm run bkit:setup   # → bkit-doctor setup
+```
+
+---
+
+## ✨ Características principales
+
+### 🧙 `setup` — Inicialización de proyecto con un solo comando
+
+```bash
+bkit-doctor setup [--path <dir>]
+```
+
+Ejecuta cuatro pasos en secuencia: **Diagnosticar → Corregir → Generar CLAUDE.md → Generar SKILL.md + scripts npm**
+
+- Hace copia de seguridad del `CLAUDE.md` existente como `CLAUDE_{date}_backup.md` antes de sobrescribir
+- Seguro en CI/CD: entornos no-TTY omiten los prompts interactivos (mantiene archivos existentes)
+- Idempotente: ejecutarlo dos veces es seguro
+
+---
+
+### 🤖 `skill` — Documentación PDCA sin prompts
+
+```bash
+bkit-doctor skill [--append-claude] [--overwrite] [--stdout] [--dry-run]
+```
+
+Genera un archivo `SKILL.md` que **programa a Claude Code** para documentar cada tarea automáticamente — sin necesidad de prompts.
+
+```markdown
+## RULE 1: PROACTIVE DOCUMENTATION
+Antes de escribir código, ejecutar automáticamente:
+  npx bkit-doctor pdca-plan "<topic>" --type <feature|bugfix|refactor|guideline>
+
+## RULE 2: STATE SYNC
+Antes de escribir código, verificar el estado PDCA existente:
+  npx bkit-doctor pdca-list
+
+## RULE 3: PIPELINE
+Después de codificar, ejecutar automáticamente las etapas restantes:
+  npx bkit-doctor pdca-do "<topic>"
+  npx bkit-doctor pdca-check "<topic>"
+  npx bkit-doctor pdca-report "<topic>"
+```
+
+**`--append-claude`** inyecta estas reglas directamente en tu `CLAUDE.md` para que se apliquen en todo el proyecto.
+
+---
+
+### 📋 `pdca` — Motor de flujo de trabajo AI basado en archivos
+
+Genera documentos PDCA estructurados para cualquier tarea. El estado se rastrea en `.bkit-doctor/pdca-state.json`.
+
+```bash
+# Todo en uno: genera una guía completa
+bkit-doctor pdca "Autenticación de usuarios" --type feature --owner alice --priority P1
+
+# Flujo de trabajo por etapas
+bkit-doctor pdca-plan "Autenticación de usuarios"
+bkit-doctor pdca-do   "Autenticación de usuarios"
+bkit-doctor pdca-check "Autenticación de usuarios"
+bkit-doctor pdca-report "Autenticación de usuarios"
+
+# Ver todos los temas activos
+bkit-doctor pdca-list
+```
+
+Tipos de documento: `guideline` · `feature` · `bugfix` · `refactor`
+
+Salida: `output/pdca/<slug>-pdca-{stage}.md` — versionable, auditable, rastreable con git.
+
+---
+
+### 🧹 `clear` — Limpieza segura de configuración
+
+```bash
+bkit-doctor clear [--path <dir>]
+```
+
+Selecciona y elimina interactivamente los archivos generados por bkit-doctor. Requiere confirmación explícita antes de eliminar — sin pérdida silenciosa de datos.
+
+---
+
+### 🔍 `check` / `fix` / `init` — Aplicación de estructura
+
+```bash
+bkit-doctor check        # Ejecuta 16 comprobaciones de diagnóstico → pass/warn/fail
+bkit-doctor fix --yes    # Corrige todo automáticamente (check + recommend + init)
+bkit-doctor init --preset default --yes   # Scaffoldea la estructura completa del proyecto
+```
+
+**16 comprobaciones de diagnóstico** en: estructura · configuración · agentes · habilidades · políticas · plantillas · documentación · changelog
+
+Código de salida `1` en fallos graves (`.claude/` o `CLAUDE.md` ausentes) — compatible con CI.
+
+---
+
+## 🤖 Cómo funciona la integración con Claude Code
+
+Cuando `SKILL.md` existe en la raíz de tu proyecto, Claude Code lo lee como contexto del proyecto y sigue sus reglas en cada tarea.
 
 ```
 your-project/
+├── CLAUDE.md          ← reglas del proyecto + directivas de flujo de trabajo
+├── SKILL.md           ← reglas de automatización para Claude Code
 ├── .claude/
 │   ├── hooks.json
-│   ├── settings.local.json
-│   ├── agents/          ← archivos de definición de agentes (marcadores de posición)
-│   ├── skills/          ← archivos de skills (marcadores de posición)
-│   ├── templates/       ← plantillas de documentos
-│   └── policies/        ← archivos de políticas
-├── docs/
-│   ├── 01-plan/
-│   ├── 02-design/
-│   ├── 03-task/
-│   └── 04-report/
-├── CLAUDE.md
-└── CHANGELOG.md
+│   └── settings.local.json
+└── output/
+    └── pdca/
+        ├── user-auth-pdca-plan.md
+        ├── user-auth-pdca-do.md
+        └── user-auth-pdca-report.md     ← generado automáticamente, sin prompts
 ```
 
-> **Este es solo un esqueleto.** Los archivos dentro de `.claude/agents/` y `.claude/skills/` son marcadores de posición. La lógica real de agentes y skills de bkit aún no está incluida — eso viene en el siguiente paso.
+El resultado: **cada funcionalidad, corrección de bugs y refactorización es planificada, ejecutada, verificada e informada automáticamente** — construyendo una auditoría permanente sin sobrecarga manual.
 
 ---
 
-### Step 2 — Instalar el plugin de bkit en Claude Code
+## 📖 Referencia de comandos
 
-Las capacidades reales de bkit — flujo de trabajo PDCA, equipos de agentes CTO, puertas de calidad y más — se ejecutan como un **plugin de Claude Code**. Abre Claude Code y ejecuta:
-
-```
-# Ejecutar dentro del terminal de Claude Code
-/plugin marketplace add popup-studio-ai/bkit-claude-code
-/plugin install bkit
-```
-
-Una vez instalado, Claude Code guarda el plugin en `~/.claude/plugins/bkit/`. A partir de este momento, los 36 skills y 31 agentes de bkit estarán activos automáticamente en todos los proyectos.
-
----
-
-### Step 3 — Iniciar tu primera sesión de desarrollo
-
-En Claude Code con el plugin de bkit instalado, inicia el flujo de trabajo PDCA con:
-
-```
-# Iniciar el desarrollo de una nueva funcionalidad (p. ej. login)
-/pdca plan login-feature
-
-# Generar el documento de diseño
-/pdca design login-feature
-
-# Implementar
-/pdca do login-feature
-
-# Verificar y analizar brechas
-/pdca analyze login-feature
-```
-
-Los documentos se escriben en la estructura de directorio `docs/` que bkit-doctor creó.
+| Comando | Descripción |
+|---------|-------------|
+| `setup` | Asistente interactivo: check → fix → CLAUDE.md → SKILL.md → scripts npm |
+| `skill` | Genera `SKILL.md` con reglas de automatización para Claude Code |
+| `clear` | Elimina interactivamente archivos de configuración con confirmación |
+| `check` | Ejecuta 16 comprobaciones de diagnóstico |
+| `fix` | Corrige todos los problemas automáticamente (check + recommend + init) |
+| `init` | Scaffoldea archivos y directorios que faltan |
+| `pdca <topic>` | Genera un documento guía PDCA completo |
+| `pdca-plan <topic>` | Genera documento de etapa Plan |
+| `pdca-do <topic>` | Genera documento de etapa Do |
+| `pdca-check <topic>` | Genera documento de etapa Check |
+| `pdca-report <topic>` | Genera documento de etapa Report |
+| `pdca-list` | Lista todos los temas PDCA activos |
+| `preset` | Lista, muestra o recomienda presets |
+| `save` | Guarda la configuración actual (local / global / both) |
+| `load` | Aplica la configuración guardada al proyecto actual |
+| `version` | Muestra información de versión y plataforma |
 
 ---
 
-### Cómo se relacionan las dos herramientas
+## 📦 Qué se comprueba (16 elementos)
 
-```
-bkit-doctor                       bkit (plugin de Claude Code)
-──────────────────────────        ──────────────────────────────────
-Crea el esqueleto del proyecto    Impulsa el motor de flujo de trabajo IA
-Estructura del directorio .claude/ 36 skills / 31 agentes
-Diseño de documentos docs/        Máquina de estados PDCA
-Configuración hooks.json          Puertas de calidad / registro de auditoría
-Archivo de contexto CLAUDE.md     Equipos de Agentes Liderados por CTO
-```
-
-bkit-doctor es una **herramienta de configuración única**. Después de eso, bkit gestiona todo dentro de Claude Code.
-
----
-
-## Instalación
-
-```bash
-# Ejecutar sin instalar (recomendado para probarlo)
-npx bkit-doctor check
-
-# Instalar globalmente
-npm install -g bkit-doctor
-
-# O añadir como dependencia de desarrollo del proyecto
-npm install --save-dev bkit-doctor
-```
-
-Requiere **Node.js >= 18**.
-
-### Ejecutar desde el código fuente
-
-```bash
-git clone https://github.com/dotoricode/bkit-doctor.git
-cd bkit-doctor
-npm install
-npm link
-```
-
----
-
-## Comandos
-
-bkit-doctor ofrece 8 comandos.
-
-### `check` — diagnosticar la estructura del proyecto
-
-Ejecuta 14 verificaciones de diagnóstico y reporta pass/warn/fail para cada elemento. Guarda una instantánea de recomendaciones para su uso posterior con `init --recommended` o `fix`.
-
-```bash
-bkit-doctor check                    # verificar directorio actual
-bkit-doctor check --path ./other     # verificar un directorio diferente
-```
-
-Exit code: **1** si alguna verificación crítica falla, **0** en caso contrario.
-
-**Ejemplo de salida:**
-
-```
-[bkit-doctor] target: /path/to/project
-
-──── categories ────────────────────────
-  ✗ structure   1 fail
-  ! config      2 warn
-  ✓ docs        4 pass
-
-──── details ───────────────────────────
-[FAIL] structure.claude-root — .claude/ missing
-[WARN] config.hooks-json — .claude/hooks.json missing
-[PASS] docs.plan — docs/01-plan exists
-
-14 total — PASS 8 / WARN 4 / FAIL 2   status: FAILED
-
-──── recommendations ───────────────────
-  bkit-doctor init --targets claude-root,hooks-json,...
-```
-
-### `init` — generar archivos faltantes
-
-Crea directorios y archivos faltantes. No destructivo por defecto — los archivos existentes nunca se sobrescriben a menos que se indique explícitamente con `--overwrite`.
-
-```bash
-bkit-doctor init --recommended --yes      # aplicar recomendaciones del último check
-bkit-doctor init --preset default --yes   # aplicar un paquete de preset
-bkit-doctor init --target hooks-json      # generar un único objetivo
-bkit-doctor init --targets agents-core,docs-core  # múltiples objetivos
-bkit-doctor init --recommended --dry-run  # previsualizar sin escribir
-bkit-doctor init --overwrite --backup     # sobrescribir con copia de seguridad
-```
-
-### `fix` — corrección automática con un solo comando
-
-Atajo para `check` + `recommend` + `init`. Ejecuta el diagnóstico, calcula las recomendaciones y las aplica.
-
-```bash
-bkit-doctor fix --yes           # corregir todo sin confirmaciones
-bkit-doctor fix --dry-run       # previsualizar la corrección
-bkit-doctor fix --fresh --yes   # ignorar instantánea y recalcular
-```
-
-### `preset` — paquetes de estructura predefinidos
-
-Los presets seleccionan qué objetivos generar y afectan el contenido de los archivos generados.
-
-```bash
-bkit-doctor preset list              # mostrar presets disponibles
-bkit-doctor preset show default      # mostrar detalles del preset
-bkit-doctor preset recommend         # recomendar preset para el proyecto actual
-```
-
-Presets disponibles:
-
-| Preset | Descripción | Targets |
-|--------|-------------|---------|
-| `default` | Estructura completa (config + agents + skills + templates + policies + docs) | 8 targets |
-| `lean` | Estructura mínima (config + agents solamente) | 4 targets |
-| `workflow-core` | Estructura de flujo de trabajo (agents + skills + templates + policies) | 5 targets |
-| `docs` | Solo documentación (plan, design, task, report, changelog) | 1 target |
-
-El contenido varía según el preset: `default` genera roles de agente detallados y descripciones completas de skills; `lean` genera marcadores de posición compactos.
-
-### `save` / `load` — persistir y compartir configuración
-
-Guarda tu modo predeterminado preferido (recommended o preset) de forma local o global, y vuelve a aplicarlo más tarde o compártelo entre proyectos.
-
-```bash
-bkit-doctor save --local --recommended    # guardar preferencia localmente
-bkit-doctor save --global --preset lean   # guardar globalmente (todos los proyectos)
-bkit-doctor save --both --preset default  # guardar en ambos
-
-bkit-doctor load --local                  # re-aplicar configuración guardada
-bkit-doctor load --global                 # aplicar configuración global al proyecto actual
-bkit-doctor load --file ./settings.json   # aplicar desde un archivo específico
-```
-
-### `pdca` — generar documento guía PDCA
-
-Genera un documento guía PDCA (Plan-Do-Check-Act) para un tema específico.
-
-```bash
-bkit-doctor pdca "criterios de aprobación de despliegue"     # generar guía
-bkit-doctor pdca "respuesta a fallos de pago" --stdout        # imprimir en terminal
-bkit-doctor pdca "procedimiento de revisión" --overwrite      # sobrescribir archivo
-bkit-doctor pdca "función de login" --type feature --owner alice
-bkit-doctor pdca-plan "aprobación de despliegue" --type guideline  # solo Plan
-bkit-doctor pdca-list                                         # listar documentos
-```
-
-**Ruta de salida predeterminada:** `output/pdca/<slug>-pdca-guide.md`
-
-| Opción | Descripción | Predeterminado |
-|--------|-------------|----------------|
-| `--stdout` | Imprimir en terminal en vez de archivo | — |
-| `--dry-run` | Vista previa del plan, ruta y conflictos | — |
-| `--overwrite` | Sobrescribir archivo existente | — |
-| `--type <kind>` | `guideline` / `feature` / `bugfix` / `refactor` | `guideline` |
-| `--owner <name>` | Nombre del responsable | `TBD` |
-| `--priority <level>` | Prioridad (`P0`~`P3`) | `P1` |
-
-**Comandos por etapa:** `pdca-plan`, `pdca-do`, `pdca-check`, `pdca-report`
-
-**Alcance (v1):** Solo generación basada en plantillas. Sin flujo de trabajo con estado, generación IA, ni subcomandos multi-paso.
-
-### `skill` — generar reglas de automatización SKILL.md
-
-Genera el archivo `SKILL.md` que enseña a Claude Code cómo usar bkit-doctor automáticamente.
-
-```bash
-bkit-doctor skill                     # genera SKILL.md en el directorio actual
-bkit-doctor skill --append-claude     # también agrega reglas al CLAUDE.md existente
-```
-
-| Regla | Comportamiento |
-|-------|---------------|
-| RULE 1: PROACTIVE DOCUMENTATION | Ejecuta `pdca-plan` automáticamente antes de codificar |
-| RULE 2: STATE SYNC | Verifica el estado con `pdca-list` antes de implementar |
-| RULE 3: PIPELINE | Ejecuta `pdca-do`, `pdca-check`, `pdca-report` automáticamente después de codificar |
-
----
-
-### `setup` — asistente interactivo de configuración del proyecto
-
-Diagnóstico, generación de `CLAUDE.md`, `SKILL.md` y scripts npm en un solo comando.
-
-```bash
-bkit-doctor setup
-```
-
-1. Ejecuta `check` + `fix`
-2. Genera `CLAUDE.md` (si existe, crea copia de seguridad `CLAUDE_{fecha}_backup.md` antes de regenerar)
-3. Genera `SKILL.md`
-4. Agrega scripts `bkit:check`, `bkit:fix`, `bkit:setup` al `package.json`
-
----
-
-### `clear` — eliminar archivos de configuración
-
-```bash
-bkit-doctor clear
-```
-
----
-
-### `version` — mostrar información de versión
-
-```bash
-bkit-doctor version       # versión + detalles de plataforma
-bkit-doctor --version     # solo número de versión
-```
-
----
-
-## Qué se verifica (14 elementos)
-
-| Categoría | Verificación | Severidad |
+| Categoría | Comprobación | Severidad |
 |-----------|-------------|-----------|
-| structure | El directorio `.claude/` existe | **hard** (exit 1 si falta) |
-| config | `CLAUDE.md` existe | **hard** (exit 1 si falta) |
-| config | `.claude/hooks.json` existe | soft |
-| config | `.claude/settings.local.json` existe | soft |
-| docs | `docs/01-plan/` a `docs/04-report/` (4 verificaciones) | soft |
-| agents | 4 archivos de definición de agente requeridos | soft |
-| skills | 7 archivos SKILL.md requeridos | soft |
-| policies | 4 archivos de política requeridos | soft |
-| templates | 4 archivos de plantilla requeridos | soft |
+| structure | Directorio `.claude/` | **hard** (exit 1) |
+| config | `CLAUDE.md` | **hard** (exit 1) |
+| config | `hooks.json` | soft |
+| config | `settings.local.json` | soft |
+| agents | 4 archivos de definición de agentes | soft |
+| skills | 7 archivos de habilidades en `.claude/skills/` | soft |
+| policies | 4 archivos de políticas | soft |
+| templates | 4 archivos de plantillas | soft |
+| docs | `docs/01-plan/` → `docs/04-report/` (4 comprobaciones) | soft |
+| docs | Directorio `output/pdca/` | soft |
+| docs | Validez del contenido de la guía PDCA | soft |
 | context | Directorio `.claude/context/` | soft |
-| changelog | `CHANGELOG.md` (3 rutas candidatas) | soft |
+| changelog | `CHANGELOG.md` | soft |
 
-Las verificaciones **hard** hacen que `check` termine con exit code 1. Las verificaciones **soft** producen advertencias pero terminan con exit code 0.
+---
+
+## 🛠 Objetivos `init` disponibles
+
+| Objetivo | Crea |
+|----------|------|
+| `claude-root` | Directorio `.claude/` |
+| `hooks-json` | `.claude/hooks.json` |
+| `settings-local` | `.claude/settings.local.json` |
+| `agents-core` | 4 archivos de definición de agentes |
+| `skills-core` | 7 archivos SKILL.md en `.claude/skills/` |
+| `templates-core` | 4 plantillas de documentos |
+| `policies-core` | 4 archivos de políticas |
+| `docs-core` | Todos los directorios `docs/` |
+| `docs-pdca` | Directorio de salida PDCA `output/pdca/` |
+| `docs-changelog` | `CHANGELOG.md` |
+
+**Presets:** `default` (completo) · `lean` (mínimo) · `workflow-core` · `docs`
+
+---
+
+## 🔗 Funciona mejor con bkit
+
+bkit-doctor impone estructura y estado. **[bkit](https://github.com/popup-studio-ai/bkit-claude-code)** es el plugin de Claude Code que impulsa el motor de flujo de trabajo AI en sí (31 agentes, 36 habilidades, orquestación PDCA).
+
+| | bkit-doctor | bkit (plugin) |
+|--|-------------|---------------|
+| Estructura del proyecto | ✅ crea y valida | — |
+| CLAUDE.md / SKILL.md | ✅ genera | lee |
+| Motor de documentos PDCA | ✅ generación de archivos | orquestación |
+| Agentes AI y habilidades | — | ✅ 31 agentes / 36 habilidades |
+| Se ejecuta en | terminal | Claude Code |
+
+```bash
+# Instala bkit dentro de Claude Code
+/plugin marketplace add popup-studio-ai/bkit-claude-code
+```
 
 ---
 
 ## Uso en CI
 
-`bkit-doctor check` devuelve exit code 1 cuando falta estructura crítica, lo que lo hace ideal para gates de CI:
-
 ```yaml
 # GitHub Actions
-- name: Verificar estructura del proyecto
+- name: Comprobar estructura del proyecto
   run: npx bkit-doctor check
+# Sale con 1 si .claude/ o CLAUDE.md faltan
 ```
-
-```bash
-# Script shell
-bkit-doctor check || { echo "Verificación de estructura fallida"; exit 1; }
-```
-
-Comportamiento del exit code:
-
-- **Hard FAIL** (`.claude/` o `CLAUDE.md` ausente) → exit 1, CI falla
-- **Soft FAIL** (solo advertencias) → exit 0, CI pasa
-
----
-
-## Targets de init disponibles
-
-| Target | Qué crea |
-|--------|----------|
-| `claude-root` | Directorio raíz `.claude/` |
-| `hooks-json` | `.claude/hooks.json` |
-| `settings-local` | `.claude/settings.local.json` |
-| `agents-core` | 4 archivos de definición de agente en `.claude/agents/` |
-| `skills-core` | 7 archivos SKILL.md de skills en `.claude/skills/` |
-| `templates-core` | 4 plantillas de documentos en `.claude/templates/` |
-| `policies-core` | 4 archivos de políticas en `.claude/policies/` |
-| `docs-plan` | Directorio `docs/01-plan/` |
-| `docs-design` | Directorio `docs/02-design/` |
-| `docs-task` | Directorio `docs/03-task/` |
-| `docs-report` | Directorio `docs/04-report/` |
-| `docs-changelog` | `CHANGELOG.md` |
-| `docs-core` | Todos los docs (alias para todos los targets `docs-*`) |
-
----
-
-## FAQ
-
-**Q: Ejecuté `init --preset default` pero las funciones de bkit no funcionan.**
-
-A: bkit-doctor crea la **estructura de archivos** de tu proyecto. Las funciones reales de bkit — flujo de trabajo PDCA, agentes, skills — se ejecutan como un **plugin de Claude Code** y deben instalarse por separado. Abre Claude Code y ejecuta:
-
-```
-/plugin marketplace add popup-studio-ai/bkit-claude-code
-/plugin install bkit
-```
-
-**Q: Aparecieron archivos en `.claude/agents/` — ¿son los agentes de bkit?**
-
-A: No. Los archivos de agentes que genera bkit-doctor son **marcadores de posición**. Los 31 agentes reales de bkit están dentro del plugin de Claude Code (`~/.claude/plugins/bkit/agents/`). Los archivos que crea bkit-doctor son útiles como referencia al escribir tus propios agentes personalizados.
-
-**Q: ¿Necesito instalar bkit?**
-
-A: No. bkit-doctor es una herramienta CLI independiente y funciona sin bkit. Si quieres usar los comandos de flujo de trabajo `/pdca` y los equipos de agentes de bkit, instala el plugin de bkit en Claude Code.
-
-**Q: ¿Sobrescribirá mis archivos existentes?**
-
-A: No por defecto. Debes pasar explícitamente `--overwrite`. Combínalo con `--backup` para hacer una copia de seguridad de los archivos existentes antes de sobrescribirlos.
-
-**Q: ¿Cómo puedo previsualizar qué se creará?**
-
-A: Usa `--dry-run`. No se escribe nada en disco.
-
-```bash
-bkit-doctor init --recommended --dry-run
-bkit-doctor fix --dry-run
-```
-
-**Q: ¿Puedo usarlo en CI?**
-
-A: Sí. `check` devuelve exit code 1 cuando falta la estructura principal, por lo que funciona como gate de CI.
-
----
-
-## ¿Qué es bkit?
-
-[bkit](https://github.com/popup-studio-ai/bkit-claude-code) (Vibecoding Kit) es un framework de flujo de trabajo de desarrollo basado en PDCA para Claude Code. Proporciona fases estructuradas (Plan, Design, Do, Check, Report), equipos de agentes y puertas de calidad para el desarrollo nativo con IA.
-
-**bkit-doctor funciona con o sin bkit:**
-
-| Funcionalidad | Sin bkit | Con bkit |
-|---------------|:--------:|:--------:|
-| `check` — diagnóstico de estructura del proyecto | ✅ | ✅ |
-| `init` — generar archivos faltantes | ✅ | ✅ |
-| `fix` — corrección automática | ✅ | ✅ |
-| `preset` — paquetes optimizados para flujos de trabajo | Partial | Full |
-| Comandos de flujo de trabajo `/pdca` | ❌ | ✅ |
-| 31 agentes / 36 skills | ❌ | ✅ |
-| Puertas de calidad PDCA / registro de auditoría | ❌ | ✅ |
-
-Más información sobre bkit: https://github.com/popup-studio-ai/bkit-claude-code
-
----
-
-## Arquitectura
-
-```
-bkit-doctor/
-├── src/
-│   ├── cli/
-│   │   ├── index.js              # Punto de entrada CLI (commander)
-│   │   └── commands/             # check, init, fix, preset, save, load, version
-│   ├── core/
-│   │   └── checker.js            # CheckerRunner — registra y ejecuta diagnósticos
-│   ├── checkers/                 # 14 módulos de diagnóstico
-│   │   └── shared/fileRules.js   # Utilidades findMissingFiles, hasAnyFile
-│   ├── check/
-│   │   ├── resultModel.js        # Tipo CheckResult
-│   │   ├── formatters/           # Renderizador de salida de terminal
-│   │   └── recommendations/      # Motor de recomendaciones + caché de instantáneas
-│   ├── init/                     # Manifiesto scaffold, constructor de plan, lógica de aplicación
-│   ├── fix/                      # resolveFixTargets — corrección con conocimiento de instantáneas
-│   ├── preset/                   # Puntuación de presets + recomendación
-│   ├── config/                   # Guardar/cargar configuración (local + global)
-│   ├── backup/                   # Gestión de sesiones de respaldo
-│   └── shared/
-│       └── remediationMap.js     # Mapeo checker id → initTarget
-├── tests/                        # 167 tests (node:test)
-├── scripts/
-│   └── verify-release.js         # Verificación de release con 38 comprobaciones
-└── docs/                         # Documentos de fases PDCA (plan, design, task, report)
-```
-
----
-
-## Relación con bkit
-
-> **bkit-doctor es un proyecto independiente.** No es un plugin oficial de bkit y no tiene afiliación con el equipo de bkit.
-
-bkit-doctor se inspiró en [bkit](https://github.com/popup-studio-ai/bkit-claude-code) — un flujo de trabajo de desarrollo nativo con IA basado en PDCA. El autor aprendió la colaboración estructurada con IA a través de los materiales de bkit, y ese conocimiento dio forma al diseño de esta herramienta.
-
-bkit-doctor **no** incluye código de bkit, **no** requiere bkit para funcionar, y **no** está respaldado ni mantenido por el equipo de bkit.
 
 ---
 
 ## Contribuciones
 
-Las contribuciones son bienvenidas. Por favor abre un issue antes de enviar un pull request para discutir el cambio propuesto.
+Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir lo que te gustaría cambiar.
 
 1. Haz fork del repositorio
-2. Crea una rama de feature: `git checkout -b feat/your-feature`
-3. Idealmente, sigue el flujo de trabajo basado en fases: Plan → Design → Implement → Check
-4. Envía un pull request con una descripción clara de qué cambió y por qué
+2. Crea una rama de funcionalidad: `git checkout -b feat/my-feature`
+3. Ejecuta los tests: `npm test`
+4. Envía un pull request
 
 ---
 
-## Licencia
-
-Apache License 2.0 — consulta [LICENSE](./LICENSE) para los términos completos.
-
----
-
-## Agradecimientos
-
-- **[bkit](https://github.com/popup-studio-ai/bkit-claude-code)** — por la filosofía de flujo de trabajo que inspiró este proyecto
-- La comunidad open-source — por las herramientas y patrones sobre los que se construye este proyecto
-
----
-
-> **Aviso legal**: Esta es una herramienta comunitaria independiente, no un producto oficial de POPUP STUDIO. "bkit" es una marca registrada de POPUP STUDIO PTE. LTD.
+<div align="center">
+  Hecho para desarrolladores que construyen con Claude Code.<br>
+  <a href="https://github.com/dotoricode/bkit-doctor">GitHub</a> · <a href="https://www.npmjs.com/package/bkit-doctor">npm</a> · <a href="CHANGELOG.md">Changelog</a>
+</div>
