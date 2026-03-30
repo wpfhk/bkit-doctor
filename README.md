@@ -2,7 +2,7 @@
 
 > Diagnose, scaffold, and maintain your AI-assisted project structure from the command line.
 
-[![npm version](https://img.shields.io/npm/v/bkit-doctor)](https://www.npmjs.com/package/bkit-doctor)
+[![npm version](https://img.shields.io/badge/npm-v1.1.0-blue)](https://www.npmjs.com/package/bkit-doctor)
 [![license](https://img.shields.io/npm/l/bkit-doctor)](https://github.com/dotoricode/bkit-doctor/blob/main/LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dotoricode/bkit-doctor/pulls)
