@@ -184,14 +184,18 @@ test('setup: generates CLAUDE.md when missing (non-TTY defaults)', () => {
   assert.ok(content.includes('bkit-doctor'));
 });
 
-test('setup: backs up existing CLAUDE.md as ._backup when regenerated', () => {
+test('setup: keeps existing CLAUDE.md unchanged (non-TTY defaults to N)', () => {
   const dir = makeTempDir();
   fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
-  fs.writeFileSync(path.join(dir, 'CLAUDE.md'), '# Old Content\noriginal stuff\n');
-  // non-TTY: existing CLAUDE.md prompt defaults to (y/N) → N, so no overwrite
-  // but we can test the backup function directly
-  const { buildClaudeContent } = require('../src/skill/claudeTemplate');
-  const content = buildClaudeContent('test-project');
-  assert.ok(content.includes('test-project'));
-  assert.ok(content.includes('Project Rules'));
+  const original = '# Old Content\noriginal stuff\n';
+  fs.writeFileSync(path.join(dir, 'CLAUDE.md'), original);
+  // non-TTY: existing CLAUDE.md prompt is (y/N) → '' → isExplicitYes('') = false → skip
+  const r = run(['setup', '--path', dir]);
+  assert.strictEqual(r.code, 0);
+  const content = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+  assert.ok(r.stdout.includes('kept existing CLAUDE.md'));
+  // backup is only created on TTY when user explicitly answers 'y' — not tested here
+  const files = fs.readdirSync(dir);
+  const backups = files.filter(f => f.startsWith('CLAUDE_') && f.endsWith('_backup.md'));
+  assert.strictEqual(backups.length, 0, 'no backup created in non-TTY mode');
 });
