@@ -77,6 +77,36 @@ test('skill --overwrite: replaces existing SKILL.md', () => {
   assert.ok(content.includes('RULE 1'));
 });
 
+// ── skill auto-links SKILL.md from CLAUDE.md ────────────────────────────────
+
+test('skill: auto-links SKILL.md in CLAUDE.md when CLAUDE.md exists', () => {
+  const dir = makeTempDir();
+  fs.writeFileSync(path.join(dir, 'CLAUDE.md'), '# Project Rules\n');
+  const r = run(['skill', '--path', dir]);
+  assert.strictEqual(r.code, 0);
+  const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+  assert.ok(claude.includes('See also: [SKILL.md](SKILL.md)'));
+  assert.ok(r.stdout.includes('linked SKILL.md from CLAUDE.md'));
+});
+
+test('skill: does not duplicate link if SKILL.md already referenced', () => {
+  const dir = makeTempDir();
+  fs.writeFileSync(path.join(dir, 'CLAUDE.md'), '# Rules\nSee also: [SKILL.md](SKILL.md)\n');
+  const r = run(['skill', '--path', dir]);
+  assert.strictEqual(r.code, 0);
+  const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+  const matches = claude.match(/SKILL\.md/g);
+  assert.strictEqual(matches.length, 2); // one in text, one in link — no extra
+});
+
+test('skill: skips linking when no CLAUDE.md exists', () => {
+  const dir = makeTempDir();
+  const r = run(['skill', '--path', dir]);
+  assert.strictEqual(r.code, 0);
+  assert.ok(fs.existsSync(path.join(dir, 'SKILL.md')));
+  assert.ok(!fs.existsSync(path.join(dir, 'CLAUDE.md')));
+});
+
 // ── skill --append-claude ───────────────────────────────────────────────────
 
 test('skill --append-claude: appends to CLAUDE.md', () => {
@@ -125,7 +155,7 @@ test('setup --help: shows description', () => {
 
 // ── setup non-interactive (piped stdin) ─────────────────────────────────────
 
-test('setup: runs non-interactively when stdin is not TTY', () => {
+test('setup: runs non-interactively and links SKILL.md from CLAUDE.md', () => {
   const dir = makeTempDir();
   // provide minimal structure to avoid crash
   fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
@@ -136,4 +166,8 @@ test('setup: runs non-interactively when stdin is not TTY', () => {
   assert.ok(r.stdout.includes('Step 1/4'));
   assert.ok(r.stdout.includes('Step 4/4'));
   assert.ok(r.stdout.includes('Setup complete'));
+  // SKILL.md created and linked from CLAUDE.md
+  assert.ok(fs.existsSync(path.join(dir, 'SKILL.md')));
+  const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+  assert.ok(claude.includes('SKILL.md'), 'CLAUDE.md should reference SKILL.md');
 });

@@ -86,6 +86,26 @@ async function skillCommand(options) {
 
   fs.writeFileSync(targetFile, content, 'utf8');
   console.log(`[bkit-doctor] created ${relPath}`);
+
+  // auto-link SKILL.md from CLAUDE.md so Claude Code loads it
+  linkSkillFromClaude(projectRoot);
+}
+
+/**
+ * Ensure CLAUDE.md contains a reference to SKILL.md.
+ * If CLAUDE.md exists but has no reference, append one line.
+ * If CLAUDE.md does not exist, skip (user may create it via init).
+ */
+function linkSkillFromClaude(projectRoot) {
+  const claudePath = path.join(projectRoot, 'CLAUDE.md');
+  if (!fs.existsSync(claudePath)) return;
+
+  const claudeContent = fs.readFileSync(claudePath, 'utf8');
+  if (claudeContent.includes('SKILL.md')) return; // already linked
+
+  const ref = '\n\n<!-- bkit-doctor automation rules -->\nSee also: [SKILL.md](SKILL.md)\n';
+  fs.writeFileSync(claudePath, claudeContent.trimEnd() + ref, 'utf8');
+  console.log(`[bkit-doctor] linked SKILL.md from CLAUDE.md`);
 }
 
 module.exports = { skillCommand };

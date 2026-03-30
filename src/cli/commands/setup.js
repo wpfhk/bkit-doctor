@@ -108,6 +108,17 @@ async function setupCommand(options) {
       const content = buildSkillContent(projectName);
       fs.writeFileSync(skillPath, content, 'utf8');
       console.log('  created SKILL.md');
+
+      // auto-link SKILL.md from CLAUDE.md
+      const claudePath = path.join(projectRoot, 'CLAUDE.md');
+      if (fs.existsSync(claudePath)) {
+        const claudeContent = fs.readFileSync(claudePath, 'utf8');
+        if (!claudeContent.includes('SKILL.md')) {
+          const ref = '\n\n<!-- bkit-doctor automation rules -->\nSee also: [SKILL.md](SKILL.md)\n';
+          fs.writeFileSync(claudePath, claudeContent.trimEnd() + ref, 'utf8');
+          console.log('  linked SKILL.md from CLAUDE.md');
+        }
+      }
     } else {
       console.log('  skipped');
     }
