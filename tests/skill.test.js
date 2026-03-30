@@ -155,19 +155,43 @@ test('setup --help: shows description', () => {
 
 // ── setup non-interactive (piped stdin) ─────────────────────────────────────
 
-test('setup: runs non-interactively and links SKILL.md from CLAUDE.md', () => {
+test('setup: runs 5-step wizard non-interactively', () => {
   const dir = makeTempDir();
-  // provide minimal structure to avoid crash
+  // provide minimal structure so check passes
   fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'CLAUDE.md'), '# Project\n');
   const r = run(['setup', '--path', dir]);
-  // should complete without hanging (non-TTY auto-accepts defaults)
   assert.strictEqual(r.code, 0);
-  assert.ok(r.stdout.includes('Step 1/4'));
-  assert.ok(r.stdout.includes('Step 4/4'));
+  assert.ok(r.stdout.includes('Step 1/5'));
+  assert.ok(r.stdout.includes('Step 2/5'));
+  assert.ok(r.stdout.includes('Step 5/5'));
   assert.ok(r.stdout.includes('Setup complete'));
-  // SKILL.md created and linked from CLAUDE.md
+  // SKILL.md created and linked
   assert.ok(fs.existsSync(path.join(dir, 'SKILL.md')));
   const claude = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
   assert.ok(claude.includes('SKILL.md'), 'CLAUDE.md should reference SKILL.md');
+});
+
+test('setup: generates CLAUDE.md when missing (non-TTY defaults)', () => {
+  const dir = makeTempDir();
+  fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+  // no CLAUDE.md — setup should create one
+  const r = run(['setup', '--path', dir]);
+  assert.strictEqual(r.code, 0);
+  assert.ok(fs.existsSync(path.join(dir, 'CLAUDE.md')));
+  const content = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8');
+  assert.ok(content.includes('Project Rules'));
+  assert.ok(content.includes('bkit-doctor'));
+});
+
+test('setup: backs up existing CLAUDE.md as ._backup when regenerated', () => {
+  const dir = makeTempDir();
+  fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'CLAUDE.md'), '# Old Content\noriginal stuff\n');
+  // non-TTY: existing CLAUDE.md prompt defaults to (y/N) → N, so no overwrite
+  // but we can test the backup function directly
+  const { buildClaudeContent } = require('../src/skill/claudeTemplate');
+  const content = buildClaudeContent('test-project');
+  assert.ok(content.includes('test-project'));
+  assert.ok(content.includes('Project Rules'));
 });

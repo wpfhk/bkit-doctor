@@ -13,15 +13,17 @@ const { buildInitPlan }              = require('../../init/buildInitPlan');
 const { applyInitPlan }              = require('../../init/applyInitPlan');
 const { formatLabel }                = require('../formatLabel');
 const { buildSkillContent }          = require('../../skill/skillTemplate');
+const { buildClaudeContent }         = require('../../skill/claudeTemplate');
 
 /**
  * setup command — interactive wizard for full project onboarding.
  *
  * Steps:
  *   1. Check & Init — diagnose, then fix structural issues
- *   2. Skill Integration — inject SKILL.md for Claude Code automation
- *   3. Scripts Injection — add helper scripts to package.json
- *   4. Final Summary — completion message
+ *   2. CLAUDE.md — generate default CLAUDE.md (backup existing)
+ *   3. Skill Integration — inject SKILL.md + link from CLAUDE.md
+ *   4. Scripts Injection — add helper scripts to package.json
+ *   5. Final Summary — completion message
  */
 async function setupCommand(options) {
   const projectRoot = path.resolve(options.path || process.cwd());
@@ -34,8 +36,18 @@ async function setupCommand(options) {
   console.log(`  project: ${projectRoot}`);
   console.log('');
 
+  // detect project name
+  let projectName = path.basename(projectRoot);
+  const pkgJsonPath = path.join(projectRoot, 'package.json');
+  if (fs.existsSync(pkgJsonPath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+      if (pkg.name) projectName = pkg.name;
+    } catch { /* use dir name */ }
+  }
+
   // ── Step 1: Check & Init ─────────────────────────────────────
-  console.log('── Step 1/4: Check & Init ──────────────────────────');
+  console.log('── Step 1/5: Check & Init ──────────────────────────');
   console.log('');
 
   const runner = new CheckerRunner();
@@ -78,8 +90,42 @@ async function setupCommand(options) {
 
   console.log('');
 
-  // ── Step 2: Skill Integration ────────────────────────────────
-  console.log('── Step 2/4: Skill Integration ─────────────────────');
+  // ── Step 2: CLAUDE.md ──────────────────────────────────────────
+  console.log('── Step 2/5: CLAUDE.md ─────────────────────────────');
+  console.log('');
+
+  const claudePath = path.join(projectRoot, 'CLAUDE.md');
+  const claudeExists = fs.existsSync(claudePath);
+
+  if (claudeExists) {
+    const answer = await ask('  CLAUDE.md already exists. Generate a new one? Existing file will be backed up. (y/N) ');
+    if (isExplicitYes(answer)) {
+      // backup existing CLAUDE.md
+      const backupPath = path.join(projectRoot, 'CLAUDE.md._backup');
+      fs.copyFileSync(claudePath, backupPath);
+      console.log(`  backed up to CLAUDE.md._backup`);
+
+      const content = buildClaudeContent(projectName);
+      fs.writeFileSync(claudePath, content, 'utf8');
+      console.log('  generated new CLAUDE.md');
+    } else {
+      console.log('  kept existing CLAUDE.md');
+    }
+  } else {
+    const answer = await ask('  Generate CLAUDE.md for this project? (Y/n) ');
+    if (isYes(answer)) {
+      const content = buildClaudeContent(projectName);
+      fs.writeFileSync(claudePath, content, 'utf8');
+      console.log('  created CLAUDE.md');
+    } else {
+      console.log('  skipped');
+    }
+  }
+
+  console.log('');
+
+  // ── Step 3: Skill Integration ────────────────────────────────
+  console.log('── Step 3/5: Skill Integration ─────────────────────');
   console.log('');
 
   const skillPath = path.join(projectRoot, 'SKILL.md');
@@ -96,21 +142,11 @@ async function setupCommand(options) {
     const proceed = defaultYes ? isYes(answer) : isExplicitYes(answer);
 
     if (proceed) {
-      let projectName = path.basename(projectRoot);
-      const pkgPath = path.join(projectRoot, 'package.json');
-      if (fs.existsSync(pkgPath)) {
-        try {
-          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-          if (pkg.name) projectName = pkg.name;
-        } catch { /* use dir name */ }
-      }
-
       const content = buildSkillContent(projectName);
       fs.writeFileSync(skillPath, content, 'utf8');
       console.log('  created SKILL.md');
 
       // auto-link SKILL.md from CLAUDE.md
-      const claudePath = path.join(projectRoot, 'CLAUDE.md');
       if (fs.existsSync(claudePath)) {
         const claudeContent = fs.readFileSync(claudePath, 'utf8');
         if (!claudeContent.includes('SKILL.md')) {
@@ -126,18 +162,17 @@ async function setupCommand(options) {
 
   console.log('');
 
-  // ── Step 3: Scripts Injection ────────────────────────────────
-  console.log('── Step 3/4: Scripts Injection ──────────────────────');
+  // ── Step 4: Scripts Injection ────────────────────────────────
+  console.log('── Step 4/5: Scripts Injection ──────────────────────');
   console.log('');
 
-  const pkgPath = path.join(projectRoot, 'package.json');
-  if (!fs.existsSync(pkgPath)) {
+  if (!fs.existsSync(pkgJsonPath)) {
     console.log('  no package.json found — skipped');
   } else {
     const answer = await ask('  Add bkit-doctor helper scripts to package.json? (Y/n) ');
     if (isYes(answer)) {
       try {
-        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+        const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
         if (!pkg.scripts) pkg.scripts = {};
 
         let added = 0;
@@ -155,7 +190,7 @@ async function setupCommand(options) {
         }
 
         if (added > 0) {
-          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+          fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
           console.log(`  added ${added} script(s): ${Object.keys(scripts).filter(k => !pkg.scripts[k] || pkg.scripts[k] === scripts[k]).join(', ')}`);
         } else {
           console.log('  scripts already present — skipped');
@@ -170,14 +205,14 @@ async function setupCommand(options) {
 
   console.log('');
 
-  // ── Step 4: Final Summary ────────────────────────────────────
-  console.log('── Step 4/4: Summary ───────────────────────────────');
+  // ── Step 5: Final Summary ────────────────────────────────────
+  console.log('── Step 5/5: Summary ───────────────────────────────');
   console.log('');
   console.log('  Setup complete! bkit-doctor is now integrated.');
   console.log('');
   console.log('  Next steps:');
-  console.log('    1. Run `claude` and start building — Claude knows bkit-doctor');
-  console.log('    2. Run `bkit-doctor check` anytime to diagnose');
+  console.log('    1. Review CLAUDE.md and customize for your project');
+  console.log('    2. Run `claude` and start building — Claude knows bkit-doctor');
   console.log('    3. Run `bkit-doctor pdca "<topic>"` to create PDCA guides');
   console.log('');
 }
