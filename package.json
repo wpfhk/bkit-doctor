@@ -30,6 +30,7 @@
     "test:fix-cli": "node --test tests/fix-cli.test.js",
     "test:pdca": "node --test tests/pdca.test.js",
     "test:skill": "node --test tests/skill.test.js",
+    "test:clear": "node --test tests/clear.test.js",
     "bkit:check": "bkit-doctor check",
     "bkit:fix": "bkit-doctor fix --yes",
     "bkit:setup": "bkit-doctor setup"

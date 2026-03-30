@@ -14,6 +14,7 @@ const { pdcaStageCommandFactory } = require('./commands/pdcaStage');
 const { pdcaListCommand }  = require('./commands/pdcaList');
 const { skillCommand }   = require('./commands/skill');
 const { setupCommand }   = require('./commands/setup');
+const { clearCommand }   = require('./commands/clear');
 const pkg = require('../../package.json');
 
 const program = new Command();
@@ -123,6 +124,14 @@ program
   .description('Interactive project setup wizard (check → fix → skill → scripts)')
   .option('-p, --path <dir>',    'project root', process.cwd())
   .action(setupCommand);
+
+// ── clear command ─────────────────────────────────────────────────────────────
+
+program
+  .command('clear')
+  .description('Remove bkit-doctor configuration files (interactive, with confirmation)')
+  .option('-p, --path <dir>',    'project root', process.cwd())
+  .action(clearCommand);
 
 // ── pdca command group ────────────────────────────────────────────────────────
 // backward compat: `pdca <topic>` → full guide (same as `pdca create <topic>`)
