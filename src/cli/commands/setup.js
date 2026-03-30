@@ -11,7 +11,6 @@ const { saveRecommendationSnapshot } = require('../../check/recommendations/save
 const { resolveFixTargets }          = require('../../fix/resolveFixTargets');
 const { buildInitPlan }              = require('../../init/buildInitPlan');
 const { applyInitPlan }              = require('../../init/applyInitPlan');
-const { formatLabel }                = require('../formatLabel');
 const { buildSkillContent }          = require('../../skill/skillTemplate');
 const { buildClaudeContent }         = require('../../skill/claudeTemplate');
 
@@ -99,8 +98,9 @@ async function setupCommand(options) {
 
   if (claudeExists) {
     const answer = await ask('  CLAUDE.md already exists. Generate a new one? Existing file will be backed up. (y/N) ');
+    // isExplicitYes: requires 'y'/'yes' — non-TTY always skips this branch
     if (isExplicitYes(answer)) {
-      // backup existing CLAUDE.md with date stamp
+      // backup existing CLAUDE.md with date stamp (TTY-only path)
       const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const backupName = `CLAUDE_${date}_backup.md`;
       const backupPath = path.join(projectRoot, backupName);
@@ -177,7 +177,7 @@ async function setupCommand(options) {
         const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
         if (!pkg.scripts) pkg.scripts = {};
 
-        let added = 0;
+        const addedKeys = [];
         const scripts = {
           'bkit:check': 'bkit-doctor check',
           'bkit:fix': 'bkit-doctor fix --yes',
@@ -187,13 +187,14 @@ async function setupCommand(options) {
         for (const [key, val] of Object.entries(scripts)) {
           if (!pkg.scripts[key]) {
             pkg.scripts[key] = val;
-            added++;
+            addedKeys.push(key);
           }
         }
+        const added = addedKeys.length;
 
         if (added > 0) {
           fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-          console.log(`  added ${added} script(s): ${Object.keys(scripts).filter(k => !pkg.scripts[k] || pkg.scripts[k] === scripts[k]).join(', ')}`);
+          console.log(`  added ${added} script(s): ${addedKeys.join(', ')}`);
         } else {
           console.log('  scripts already present — skipped');
         }
