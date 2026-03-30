@@ -153,7 +153,7 @@ npm link
 
 ## Commands
 
-bkit-doctor provides 7 commands:
+bkit-doctor provides 8 commands:
 
 ### `check` — diagnose project structure
 
@@ -244,6 +244,34 @@ bkit-doctor load --local                  # re-apply saved settings
 bkit-doctor load --global                 # apply global to current project
 bkit-doctor load --file ./settings.json   # apply from a specific file
 ```
+
+### `pdca` — generate PDCA guide document
+
+Generate a structured PDCA (Plan-Do-Check-Act) guide document for any topic. The output is a Markdown file with actionable placeholders ready for editing.
+
+```bash
+bkit-doctor pdca "Deploy Approval Criteria"              # generate guide
+bkit-doctor pdca "Payment Failure Response" --stdout     # print to terminal
+bkit-doctor pdca "Ops Checklist" --overwrite             # overwrite existing
+bkit-doctor pdca "Release Checklist" -o docs/custom.md   # custom output path
+bkit-doctor pdca "Login Feature" --type feature --owner alice --priority P0
+```
+
+**Default output path:** `docs/00-pdca/<slug>-pdca-guide.md`
+
+**Options:**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-p, --path <dir>` | Project root directory | `cwd` |
+| `-o, --output <file>` | Custom output file path | — |
+| `--stdout` | Print to stdout instead of writing a file | — |
+| `--overwrite` | Overwrite existing file | — |
+| `--type <kind>` | `guideline` / `feature` / `bugfix` / `refactor` | `guideline` |
+| `--owner <name>` | Owner name | `TBD` |
+| `--priority <level>` | Priority (`P0` / `P1` / `P2` / `P3`) | `P1` |
+
+**Scope (v1):** Template-based generation only. No stateful PDCA workflow, no AI generation, no multi-step sub-commands (`pdca plan`, `pdca do`, etc.).
 
 ### `version` — display version info
 

@@ -27,7 +27,8 @@
     "test:load": "node --test tests/load.test.js",
     "test:check": "node --test tests/check.test.js",
     "test:init": "node --test tests/init.test.js",
-    "test:fix-cli": "node --test tests/fix-cli.test.js"
+    "test:fix-cli": "node --test tests/fix-cli.test.js",
+    "test:pdca": "node --test tests/pdca.test.js"
   },
   "repository": {
     "type": "git",

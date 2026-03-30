@@ -9,6 +9,7 @@ const { fixCommand }     = require('./commands/fix');
 const { presetListCommand, presetShowCommand, presetRecommendCommand } = require('./commands/preset');
 const { saveCommand }    = require('./commands/save');
 const { loadCommand }    = require('./commands/load');
+const { pdcaCommand }    = require('./commands/pdca');
 const pkg = require('../../package.json');
 
 const program = new Command();
@@ -98,6 +99,18 @@ program
   .option('--global',          'global 설정에서 로드하여 현재 프로젝트에 적용')
   .option('--file <path>',     '지정 파일에서 로드하여 현재 프로젝트에 적용')
   .action(loadCommand);
+
+program
+  .command('pdca <topic>')
+  .description('Generate PDCA guide document')
+  .option('-p, --path <dir>',      'project root', process.cwd())
+  .option('-o, --output <file>',   'output file path')
+  .option('--stdout',              'print output')
+  .option('--overwrite',           'overwrite existing file')
+  .option('--type <kind>',         'guideline | feature | bugfix | refactor', 'guideline')
+  .option('--owner <name>',        'owner name', 'TBD')
+  .option('--priority <level>',    'priority level', 'P1')
+  .action(pdcaCommand);
 
 function collect(val, prev) { return prev.concat([val]); }
 
